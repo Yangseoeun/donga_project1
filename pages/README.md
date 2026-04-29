@@ -20,3 +20,5 @@ Streamlit 멀티 페이지 화면을 관리하는 폴더입니다. 파일명 앞
 - 화면 배치나 입력 폼은 이 폴더에서 수정합니다.
 - 반복되는 HTML/CSS UI는 `ui/components.py`와 `ui/styles.py`로 옮기는 것을 권장합니다.
 - OpenAI API 직접 호출은 금지하고 `core/chat_engine.py`를 사용합니다.
+
+수정테스트 13:44
