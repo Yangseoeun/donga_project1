@@ -20,3 +20,5 @@
 - 백엔드 B는 주로 `llm_client.py`, `prompt_templates.py`, `chat_engine.py`를 수정합니다.
 - `schemas.py`는 A/B 공통 계약이므로 변경 전에 반드시 서로 합의합니다.
 - 프론트는 OpenAI API를 직접 호출하지 않고 `chat_engine.py`를 통해 호출합니다.
+
+
