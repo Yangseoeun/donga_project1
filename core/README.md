@@ -22,5 +22,4 @@
 - `schemas.py`는 A/B 공통 계약이므로 변경 전에 반드시 서로 합의합니다.
 - 프론트는 OpenAI API를 직접 호출하지 않고 `chat_engine.py`를 통해 호출합니다.
 
-## 3기 서한진 백엔드 A는 saju_calculator.py`, `result_builder.py` 만 수정 하겠습니다 ##
-## 3기 서한진 백엔드 다시 한번 수정해봅니다.##
+##
