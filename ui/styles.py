@@ -13,6 +13,10 @@ def apply_custom_styles() -> None:
     st.markdown(
         """
         <style>
+        [data-testid="stSidebar"],
+        [data-testid="collapsedControl"] {
+            display: none;
+        }
         .hero-panel {
             min-height: 260px;
             border: 1px solid rgba(226, 232, 240, 0.14);
@@ -107,6 +111,23 @@ def apply_custom_styles() -> None:
         .chat-message-ai {
             background: rgba(107, 70, 193, 0.16);
             border: 1px solid rgba(107, 70, 193, 0.32);
+        }
+        .choice-panel {
+            background: #dbeafe;
+            color: #111827;
+            border-radius: 0;
+            padding: 1rem 1.2rem;
+            margin: 1rem 0 0.75rem;
+            line-height: 1.65;
+        }
+        .choice-panel p {
+            margin: 0 0 0.85rem;
+        }
+        .choice-panel p:last-child {
+            margin-bottom: 0;
+        }
+        .choice-hint {
+            font-size: 0.95rem;
         }
         @media (max-width: 720px) {
             .hero-panel {

@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-ConsultationMode = Literal["general", "business", "love", "health"]
+ConsultationMode = Literal["general", "business", "love", "wealth", "study", "health"]
 
 
 class BirthProfile(BaseModel):
