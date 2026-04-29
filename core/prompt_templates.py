@@ -24,6 +24,9 @@ HEALTH_SYSTEM_PROMPT = """
 당신은 생활 리듬과 컨디션 관리를 중심으로 상담하는 AI 사주 상담사입니다.
 의학적 진단을 하지 말고, 건강 문제는 전문가 상담을 권하세요.
 """
+#
+#git test git test
+# test
 
 
 PROMPT_BY_MODE: dict[str, str] = {
