@@ -6,6 +6,7 @@ import streamlit as st
 
 from core.chat_engine import build_fallback_answer, run_chat, run_chat_stream
 from core.llm_client import LLMConfigurationError
+from core.prompt_templates import MODE_GREETING
 from ui.components import render_chat_message, render_context_preview
 from ui.styles import apply_custom_styles
 from utils.helpers import init_session_state
@@ -67,6 +68,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+if "prev_mode" not in st.session_state:
+    st.session_state["prev_mode"] = None
+
 selected_mode = st.session_state.get("current_mode", "business")
 mode_cols = st.columns(len(MODE_OPTIONS))
 for index, (mode_key, mode_label) in enumerate(MODE_OPTIONS):
@@ -76,6 +80,14 @@ for index, (mode_key, mode_label) in enumerate(MODE_OPTIONS):
             type="primary" if selected_mode == mode_key else "secondary",
             use_container_width=True,
         ):
+            # 이전과 다른 모드로 전환될 때만 인사말 주입
+            if st.session_state["prev_mode"] != mode_key:
+                greeting = MODE_GREETING.get(mode_key, "")
+                if greeting:
+                    st.session_state["chat_history"].append(
+                        {"role": "assistant", "content": greeting}
+                    )
+                st.session_state["prev_mode"] = mode_key
             st.session_state["current_mode"] = mode_key
             selected_mode = mode_key
 
