@@ -225,3 +225,12 @@ _PRESCRIPTION_MAP["new_case"] = NewCategoryPrescription()
 | 변경 유형 | 수정 |
 | 변경 요약 | 모드 버튼 클릭 시 `prev_mode` 비교로 모드 변경을 감지하고 `MODE_GREETING`을 `chat_history`에 자동 주입하여 인사말 즉시 표시 |
 | 인터페이스 영향 | 없음 (`ui/components.py`, `ui/styles.py` 미수정, core 인터페이스 유지) |
+
+### 2026-04-30 (2차)
+
+| 항목 | 내용 |
+| --- | --- |
+| 수정 파일 | `core/prompt_templates.py` |
+| 변경 유형 | 수정 |
+| 변경 요약 | `MODE_GREETING` 5개 멘트 전면 재작성 — 고리타분한 점술가 어투 제거, 오행 데이터를 읽는 세련된 전문가 톤으로 전환, 모바일 가독성을 위한 `\n` 단락 처리 적용 |
+| 인터페이스 영향 | 없음 (딕셔너리 값만 변경, 키 구조 및 외부 인터페이스 유지) |
