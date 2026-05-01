@@ -8,13 +8,13 @@ from core.daily_report_builder import build_daily_report
 from ui.styles import apply_custom_styles
 from utils.helpers import init_session_state
 
-# ── 오행별 색상
+# ── 오행별 색상 (데일리 리포트 디자인 토큰)
 _ELEMENT_COLORS: dict[str, str] = {
-    "wood":  "#6cbf8e",
-    "fire":  "#e8837a",
-    "earth": "#c4a96a",
-    "metal": "#9eb5c8",
-    "water": "#5fa8c8",
+    "wood":  "#A8C69F",
+    "fire":  "#F8A1A4",
+    "earth": "#EBD9B4",
+    "metal": "#D1D1D1",
+    "water": "#3E8EAB",
 }
 _ELEMENT_KR: dict[str, str] = {
     "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水",
@@ -29,16 +29,16 @@ _FORTUNE_META = [
     ("건강운",     "#a89fd8", "⊕",  "건강운"),
 ]
 
-# ── 코칭 섹션 메타
+# ── 코칭 섹션 메타 (icon_bg, icon_color, 파스텔 팔레트)
 _COACHING_META = [
-    ("outfit",      "#7ab3d4", "👔", "의상 코칭",
+    ("outfit",      "rgba(255,193,100,0.25)", "#c47c00", "👔", "의상 코칭",
      ["돋보이는 코디 및 색상", "행운의 아이템 & 액세서리", "피해야 할 의상"]),
-    ("food",        "#6cbf8e", "🍵", "푸드 코칭",
+    ("food",        "rgba(62,142,171,0.25)",  "#3E8EAB", "🍵", "푸드 코칭",
      ["점심/회식 추천 메뉴", "주류 및 음료", "피해야 할 음식/주류/음료"]),
-    ("environment", "#a89fd8", "🌿", "공간 코칭",
-     ["업무 효율용 공간 제안", "행운의 방향", "피해야 할 장소"]),
-    ("action",      "#e8c46a", "⚡", "행동 전략 코칭",
-     ["커뮤니케이션 팁", "네트워킹 팁"]),
+    ("environment", "rgba(168,198,159,0.30)", "#5a9e6f", "🌿", "환경 코칭",
+     ["행운의 공간", "에너지 방향", "피해야 할 장소"]),
+    ("action",      "rgba(248,161,164,0.25)", "#d04b50", "⚡", "행동 전략 코칭",
+     ["커뮤니케이션 팁", "네트워킹 전략"]),
 ]
 
 
@@ -49,23 +49,27 @@ def _inject_css() -> None:
     st.markdown(
         """
         <style>
-        [data-testid="stAppViewContainer"] > .main { background: #f5f6f8; }
+        [data-testid="stMain"],
+        [data-testid="stMainBlockContainer"] {
+            background: #e9eff0 !important;
+        }
+        [data-testid="stAppViewContainer"] > .main { background: #E9F1F6; }
         [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none; }
 
         /* ── 로고 / 타이틀 */
         .dr-logo-row {
-            color: #3b82a0; font-size: 0.76rem; font-weight: 700;
+            color: #3E8EAB; font-size: 0.76rem; font-weight: 700;
             letter-spacing: 1.5px; text-transform: uppercase;
             margin-bottom: 0.2rem;
         }
         .dr-page-title {
             font-size: 1.8rem; font-weight: 800;
-            color: #1a2035; margin: 0 0 0.8rem;
+            color: #1A374D; margin: 0 0 0.8rem;
         }
 
         /* ── 상단 패널 */
         .dr-top-panel {
-            background: #ffffff; border-radius: 14px;
+            background: #ffffff; border-radius: 20px;
             padding: 1.5rem 1.8rem; margin-bottom: 1.1rem;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
@@ -82,39 +86,39 @@ def _inject_css() -> None:
             display: flex; align-items: center; justify-content: center;
             font-size: 1.7rem; margin-bottom: 0.55rem;
         }
-        .dr-profile-name { font-size: 1.05rem; font-weight: 700; color: #1a2035; margin: 0 0 0.15rem; }
+        .dr-profile-name { font-size: 1.05rem; font-weight: 700; color: #1A374D; margin: 0 0 0.15rem; }
         .dr-profile-birth { font-size: 0.74rem; color: #8a94a6; margin-bottom: 0.8rem; }
         .dr-pillar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem 0.7rem; }
         .dr-pm-label { font-size: 0.69rem; color: #8a94a6; display: block; }
-        .dr-pm-value { font-size: 0.9rem; font-weight: 700; color: #1a2035; }
+        .dr-pm-value { font-size: 0.9rem; font-weight: 700; color: #1A374D; }
 
         /* ── Balance Status */
         .balance-title { font-size: 0.77rem; color: #8a94a6; font-weight: 600; margin-bottom: 0.7rem; }
-        .balance-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 180px; }
+        .balance-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 240px; }
         .balance-bar-col {
             display: flex; flex-direction: column;
             align-items: center; flex: 1;
             height: 100%; justify-content: flex-end;
         }
-        .balance-pct { font-size: 0.67rem; font-weight: 700; color: #fff; margin-bottom: 3px; }
+        .balance-pct { font-size: 0.75rem; font-weight: 700; color: #fff; padding-top: 6px; }
         .balance-bar {
-            width: 100%; border-radius: 6px 6px 0 0; min-height: 16px;
+            width: 100%; border-radius: 16px 16px 0 0; min-height: 20px;
             display: flex; align-items: flex-start;
-            justify-content: center; padding-top: 4px;
+            justify-content: center;
         }
-        .balance-lbl  { font-size: 0.74rem; color: #5a6272; margin-top: 0.3rem; font-weight: 600; }
-        .balance-lbl2 { font-size: 0.64rem; color: #b0bac8; }
+        .balance-lbl  { font-size: 0.82rem; color: #072f48; margin-top: 0.35rem; font-weight: 700; }
+        .balance-lbl2 { font-size: 0.72rem; color: #7a7a7a; font-weight: 400; }
 
         /* ── 한 줄 요약 */
         .dr-summary-box {
-            background: #ffffff; border-radius: 12px;
+            background: #ffffff; border-radius: 20px;
             padding: 1.2rem 1.8rem; text-align: center;
             margin-bottom: 1rem;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
         .dr-summary-box p {
             font-size: 1.03rem; font-weight: 700;
-            color: #1a2035; margin: 0; line-height: 1.5;
+            color: #1A374D; margin: 0; line-height: 1.5;
         }
 
         /* ── 섹션 레이블 */
@@ -126,19 +130,26 @@ def _inject_css() -> None:
 
         /* ── 운세 카드 */
         .dr-fortune-card {
-            background: #ffffff; border-radius: 12px;
-            padding: 0.95rem 1.15rem 0.95rem 0.95rem;
+            background: #ffffff; border-radius: 20px;
+            padding: 1.1rem 1.3rem;
             margin-bottom: 0.65rem;
             box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-            display: flex; gap: 0.8rem; align-items: flex-start;
         }
-        .dr-fortune-dot {
-            width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.9rem; flex-shrink: 0; margin-top: 1px;
+        .dr-fortune-badge-primary {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #1A374D; color: #e9f4f6;
+            border-radius: 32px; padding: 3px 16px;
+            font-size: 0.88rem; font-weight: 700;
+            margin-bottom: 0.6rem;
         }
-        .dr-flabel { font-size: 0.74rem; font-weight: 700; margin-bottom: 0.25rem; }
-        .dr-ftext  { font-size: 0.84rem; line-height: 1.7; color: #3a4155; margin: 0; }
+        .dr-fortune-badge-secondary {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(62,142,171,0.18); color: #3E8EAB;
+            border-radius: 32px; padding: 3px 16px;
+            font-size: 0.88rem; font-weight: 700;
+            margin-bottom: 0.6rem;
+        }
+        .dr-ftext  { font-size: 0.88rem; line-height: 1.75; color: #333333; margin: 0; }
 
         /* ── 코칭 카드 */
         .dr-coaching-grid {
@@ -148,7 +159,7 @@ def _inject_css() -> None:
             margin-bottom: 0.5rem;
         }
         .dr-coaching-card {
-            background: #ffffff; border-radius: 12px;
+            background: #ffffff; border-radius: 20px;
             padding: 1rem 1.1rem;
             box-shadow: 0 1px 6px rgba(0,0,0,0.05);
             height: 100%;
@@ -164,12 +175,12 @@ def _inject_css() -> None:
         .dr-cc-title { font-size: 0.86rem; font-weight: 700; color: #1a2035; }
         .dr-coaching-card ul { list-style: none; margin: 0; padding: 0; flex: 1; }
         .dr-coaching-card li {
-            font-size: 0.8rem; line-height: 1.6; color: #3a4155;
+            font-size: 0.8rem; line-height: 1.6; color: #333333;
             padding: 0.25rem 0; border-bottom: 1px solid #f0f2f5;
             display: flex; gap: 0.4rem;
         }
         .dr-coaching-card li:last-child { border-bottom: none; }
-        .dr-ck-key { font-weight: 700; white-space: nowrap; min-width: 5rem; color: #1a2035; }
+        .dr-ck-key { font-weight: 700; white-space: nowrap; min-width: 5rem; color: #1A374D; }
 
         @media (max-width: 720px) {
             .dr-top-inner { grid-template-columns: 1fr; }
@@ -211,10 +222,14 @@ def _render_top_panel(saju, profile: dict) -> None:
     for en in elem_order:
         color  = _ELEMENT_COLORS[en]
         pct    = _pct(elems.get(en, 0), total)
-        height = max(int(pct * 1.6), 18)
+        height = max(int(pct * 2.0), 20)
+        gradient = (
+            f"linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 100%), "
+            f"linear-gradient(to left, {color}, {color})"
+        )
         bars_html += f"""
         <div class="balance-bar-col">
-            <div class="balance-bar" style="background:{color};height:{height}px;">
+            <div class="balance-bar" style="background:{gradient};height:{height}px;">
                 <span class="balance-pct">{pct}%</span>
             </div>
             <div class="balance-lbl">{_ELEMENT_KR[en]}</div>
@@ -252,16 +267,14 @@ def _render_top_panel(saju, profile: dict) -> None:
 
 def _render_fortune(detailed: dict) -> None:
     st.markdown('<div class="dr-slabel">오늘의 운세</div>', unsafe_allow_html=True)
-    for key, color, icon, label in _FORTUNE_META:
-        text = escape(detailed.get(key, ""))
+    for i, (key, _color, icon, label) in enumerate(_FORTUNE_META):
+        text       = escape(detailed.get(key, ""))
+        badge_cls  = "dr-fortune-badge-primary" if i == 0 else "dr-fortune-badge-secondary"
         st.markdown(
             f"""
             <div class="dr-fortune-card">
-                <div class="dr-fortune-dot" style="background:{color}22;color:{color};">{icon}</div>
-                <div style="flex:1;">
-                    <div class="dr-flabel" style="color:{color};">{label}</div>
-                    <p class="dr-ftext">{text}</p>
-                </div>
+                <div class="{badge_cls}">{icon}&nbsp;{label}</div>
+                <p class="dr-ftext">{text}</p>
             </div>
             """,
             unsafe_allow_html=True,
@@ -275,7 +288,7 @@ def _render_coaching(coaching: dict) -> None:
     )
 
     cards_html = ""
-    for key, color, icon, title, fields in _COACHING_META:
+    for key, icon_bg, icon_color, icon, title, fields in _COACHING_META:
         section    = coaching.get(key, {})
         items_html = "".join(
             f'<li><span class="dr-ck-key">{escape(f)}</span>'
@@ -285,8 +298,8 @@ def _render_coaching(coaching: dict) -> None:
         cards_html += f"""
         <div class="dr-coaching-card">
             <div class="dr-cc-header">
-                <div class="dr-cc-icon" style="background:{color}22;color:{color};">{icon}</div>
-                <span class="dr-cc-title">{title}</span>
+                <div class="dr-cc-icon" style="background:{icon_bg};color:{icon_color};">{icon}</div>
+                <span class="dr-cc-title" style="color:{icon_color};">{title}</span>
             </div>
             <ul>{items_html}</ul>
         </div>"""
