@@ -28,14 +28,14 @@ apply_landing_styles()
 render_landing_hero()
 
 # ── 입력 폼 (중앙 정렬: 좌우 여백 컬럼으로 구현)
-_, form_col, _ = st.columns([1, 2, 1])
+_, form_col, _ = st.columns([0.75, 2.5, 0.75])
 with form_col:
-    st.markdown(
-        '<p class="form-desc">생년월일을 입력한 뒤 원하는 방식으로 상담을 시작하세요.</p>',
-        unsafe_allow_html=True,
-    )
-
     with st.form("birth_profile_form"):
+        st.markdown(
+            '<p class="form-desc">생년월일을 입력한 뒤 원하는 방식으로 상담을 시작하세요.</p>',
+            unsafe_allow_html=True,
+        )
+
         name = st.text_input("이름", placeholder="이름")
 
         col_a, col_b = st.columns(2)
@@ -87,10 +87,10 @@ saju    = st.session_state.get("user_saju")
 profile = st.session_state.get("birth_profile", {})
 
 if saju is not None:
-    _, banner_col, _ = st.columns([0.3, 4, 0.3])
+    _, banner_col, _ = st.columns([0.75, 2.5, 0.75])
     with banner_col:
         render_input_complete_banner(profile, saju)
 
-    _, guide_col, _ = st.columns([0.3, 4, 0.3])
+    _, guide_col, _ = st.columns([0.75, 2.5, 0.75])
     with guide_col:
         render_guide_section()

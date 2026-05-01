@@ -1,6 +1,18 @@
 """Centralized Streamlit CSS."""
 
+import base64
+from pathlib import Path
+
 import streamlit as st
+
+
+_MAIN_IMG_DIR = Path(__file__).parent.parent / "img" / "proj1_main"
+
+
+@st.cache_data
+def _main_img_b64(filename: str) -> str:
+    with open(_MAIN_IMG_DIR / filename, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 
 def apply_custom_styles() -> None:
@@ -155,8 +167,8 @@ def apply_landing_styles() -> None:
     랜딩 페이지(app.py) 전용 CSS.
     Figma 디자인 토큰 기반으로 작성. 다른 페이지에서는 호출하지 않는다.
     """
-    st.markdown(
-        """
+    bg_b64 = _main_img_b64("Frame 1000004456.png")
+    css = """
         <style>
         /* ── Pretendard 폰트 */
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
@@ -169,83 +181,207 @@ def apply_landing_styles() -> None:
         /* ── 앱 배경 (conic gradient → e9f4f6 페이드) */
         .stApp,
         [data-testid="stAppViewContainer"] > .main {
-            background:
-                conic-gradient(
-                    from 180deg at 50% 0%,
-                    rgba(182, 226, 214, 0.90) 0deg,
-                    rgba(209, 238, 237, 0.75) 90deg,
-                    rgba(233, 244, 246, 0.60) 180deg,
-                    rgba(209, 238, 237, 0.75) 270deg,
-                    rgba(182, 226, 214, 0.90) 360deg
-                ),
-                linear-gradient(
-                    180deg,
-                    rgba(229, 246, 245, 0.60) 0%,
-                    rgba(233, 244, 246, 1.00) 55%,
-                    rgba(233, 244, 246, 1.00) 100%
-                ) !important;
+            background: url("data:image/png;base64,__BG_B64__") center top / cover no-repeat fixed !important;
             font-family: 'Pretendard', sans-serif;
+        }
+        [data-testid="stMainBlockContainer"] {
+            padding-top: 0 !important;
         }
 
         /* ── 랜딩 히어로 */
         .landing-hero {
-            padding: 52px 24px 40px;
+            padding: 0 24px 20px;
             text-align: center;
         }
         .landing-logo-badge {
             display: inline-block;
-            font-size: 13px; font-weight: 700;
-            color: #2a6a7a; letter-spacing: 2.5px;
-            text-transform: uppercase; margin-bottom: 20px;
+            margin-bottom: 46px;
+        }
+        .landing-logo-badge img {
+            height: auto;
+            max-width: none;
+            display: block;
+            margin: 0 auto;
         }
         .landing-headline {
             font-family: 'Pretendard', sans-serif;
-            font-size: 40px; font-weight: 700;
-            color: #000; letter-spacing: -0.02em;
-            margin: 0 0 14px; line-height: 1.25;
+            font-size: 42px; font-weight: 900;
+            color: #000000 !important; letter-spacing: 0;
+            margin: 0 0 16px; line-height: 1.2;
+        }
+        .landing-headline span {
+            color: #000000 !important;
         }
         .landing-brand-line {
             font-family: 'Pretendard', sans-serif;
-            font-size: 18px; color: #333; margin: 0;
-            line-height: 1.6;
+            font-size: 22px; color: #000000; margin: 0;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+        .landing-brand-line strong {
+            color: #000000;
+            font-weight: 900;
         }
 
         /* ── 폼 설명 */
         .form-desc {
             font-family: 'Pretendard', sans-serif;
-            font-size: 15px; color: #555;
-            text-align: center; margin-bottom: 18px;
+            font-size: 13px;
+            color: #000000;
+            text-align: center;
+            margin: 0 0 18px;
         }
 
         /* ── 폼 컨테이너 카드 (glassmorphism) */
         [data-testid="stForm"] {
-            background: rgba(255, 255, 255, 0.6) !important;
-            border-radius: 16px !important;
-            padding: 24px 32px !important;
-            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            background: rgba(255, 255, 255, 0.72) !important;
+            border-radius: 12px !important;
+            padding: 20px 140px 24px !important;
+            border: 1px solid rgba(255, 255, 255, 0.90) !important;
             backdrop-filter: blur(8px) !important;
         }
 
         /* ── Streamlit 입력 필드 → Figma 스타일 오버라이드 */
         [data-testid="stTextInput"] input {
-            border-radius: 16px !important;
-            border: 2px solid #d5d5d5 !important;
-            height: 56px !important;
+            border-radius: 8px !important;
+            border: 1px solid #cfd7d9 !important;
+            height: 42px !important;
             font-family: 'Pretendard', sans-serif !important;
-            font-size: 16px !important;
+            font-size: 13px !important;
             background: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"],
+        [data-testid="stDateInput"] [data-baseweb="input"],
+        [data-testid="stTimeInput"] [data-baseweb="input"],
+        [data-baseweb="input"] {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stTextInput"] [data-baseweb="input"] *,
+        [data-testid="stDateInput"] [data-baseweb="input"] *,
+        [data-testid="stTimeInput"] [data-baseweb="input"] *,
+        [data-baseweb="input"] * {
+            background-color: #ffffff !important;
+            color: #000000 !important;
         }
         [data-testid="stDateInput"] input {
-            border-radius: 16px !important;
-            border: 2px solid #d5d5d5 !important;
+            border-radius: 8px !important;
+            border: none !important;
+            height: 42px !important;
             font-family: 'Pretendard', sans-serif !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stDateInput"] [data-baseweb="input"] {
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 8px !important;
+            border: 1px solid #cfd7d9 !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+        }
+        [data-testid="stDateInput"] [data-baseweb="input"] > div {
+            height: 42px !important;
+            min-height: 42px !important;
+            border-radius: 8px !important;
             background: #ffffff !important;
         }
         [data-testid="stSelectbox"] > div > div[data-baseweb="select"] > div:first-child {
-            border-radius: 16px !important;
-            border: 2px solid #d5d5d5 !important;
+            border-radius: 8px !important;
+            border: 1px solid #cfd7d9 !important;
             background: #ffffff !important;
-            min-height: 52px !important;
+            min-height: 42px !important;
+            color: #000000 !important;
+        }
+        [data-testid="stSelectbox"] [data-baseweb="select"],
+        [data-testid="stSelectbox"] [data-baseweb="select"] > div,
+        [data-testid="stSelectbox"] [data-baseweb="select"] div {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stSelectbox"] svg {
+            fill: #000000 !important;
+            color: #000000 !important;
+        }
+        [data-testid="stTimeInput"] input {
+            border-radius: 8px !important;
+            border: 1px solid #cfd7d9 !important;
+            height: 42px !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stTimeInput"] > div,
+        [data-testid="stTimeInput"] div,
+        [data-testid="stTimeInput"] button {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        [data-testid="stTimeInput"] svg {
+            fill: #000000 !important;
+            color: #000000 !important;
+        }
+        /* ── 라디오 버튼: 미선택 = 파란 테두리 + 흰 배경 */
+        [data-testid="stRadio"] input[type="radio"] {
+            accent-color: #087f9b !important;
+        }
+        [data-testid="stRadio"] [role="radio"] {
+            background-color: #ffffff !important;
+            border: 2px solid #087f9b !important;
+            border-radius: 50% !important;
+            width: 20px !important;
+            height: 20px !important;
+            position: relative !important;
+        }
+        /* 미선택 상태: 내부 점 없음 (흰 배경만) */
+        [data-testid="stRadio"] [role="radio"]::after {
+            content: none !important;
+        }
+        /* 선택된 상태: 파란 테두리 유지 */
+        [data-testid="stRadio"] [role="radio"][aria-checked="true"],
+        [data-testid="stRadio"] [role="radio"][data-checked="true"],
+        [data-testid="stRadio"] [role="radiogroup"] label [aria-checked="true"],
+        [data-testid="stRadio"] [role="radiogroup"] label [data-checked="true"] {
+            background-color: #ffffff !important;
+            border: 2px solid #087f9b !important;
+        }
+        /* 선택된 상태: 파란색 내부 점 */
+        [data-testid="stRadio"] [role="radio"][aria-checked="true"]::after,
+        [data-testid="stRadio"] [role="radio"][data-checked="true"]::after,
+        [data-testid="stRadio"] [role="radiogroup"] label [aria-checked="true"]::after,
+        [data-testid="stRadio"] [role="radiogroup"] label [data-checked="true"]::after {
+            background-color: #087f9b !important;
+            border: none !important;
+            border-radius: 50% !important;
+            content: "" !important;
+            display: block !important;
+            height: 10px !important;
+            width: 10px !important;
+            left: 50% !important;
+            position: absolute !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
+        [data-testid="stTextInput"] label,
+        [data-testid="stDateInput"] label,
+        [data-testid="stTimeInput"] label,
+        [data-testid="stSelectbox"] label,
+        [data-testid="stRadio"] label,
+        [data-testid="stRadio"] p,
+        [data-testid="stRadio"] span {
+            color: #000000 !important;
+            font-size: 12px !important;
+        }
+        [data-testid="stRadio"] [role="radiogroup"] label span {
+            font-size: 16px !important;
+            font-weight: 700 !important;
+        }
+        [data-testid="stTextInput"] input::placeholder,
+        [data-testid="stDateInput"] input::placeholder,
+        [data-testid="stTimeInput"] input::placeholder {
+            color: rgba(0, 0, 0, 0.42) !important;
         }
 
         /* ── 폼 제출 버튼 */
@@ -264,18 +400,18 @@ def apply_landing_styles() -> None:
         /* ── 완료 배너 (다크 네이비) */
         .complete-banner {
             background: #072f48;
-            border-radius: 16px;
-            padding: 28px 36px;
-            margin: 20px 0 8px;
+            border-radius: 8px;
+            padding: 22px 24px;
+            margin: 18px 0 8px;
             display: flex;
             align-items: center;
             justify-content: space-around;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 0;
+            flex-wrap: nowrap;
         }
         .complete-item {
             display: flex; align-items: center;
-            gap: 14px; flex: 1; min-width: 120px;
+            gap: 12px; flex: 1 1 0; min-width: 0;
         }
         .complete-icon-circle {
             background: #e9f4f6; border-radius: 50%;
@@ -290,73 +426,79 @@ def apply_landing_styles() -> None:
         }
         .complete-text-value {
             font-family: 'Pretendard', sans-serif;
-            font-size: 20px; color: #e9f4f6;
+            font-size: 16px; color: #e9f4f6;
             font-weight: 700; margin: 3px 0 0;
             white-space: nowrap;
         }
         .complete-sep {
-            width: 1px; height: 52px;
-            background: rgba(233, 244, 246, 0.22);
-            flex-shrink: 0;
+            display: none;
         }
 
         /* ── 가이드 섹션 */
         .guide-title {
             font-family: 'Pretendard', sans-serif;
-            font-size: 30px; font-weight: 700;
+            font-size: 22px; font-weight: 800;
             color: #000; text-align: center;
-            margin: 28px 0 18px;
+            margin: 20px 0 14px;
         }
         .guide-card {
             background: #f9f9f9;
-            border-radius: 16px;
-            padding: 32px 24px 20px;
+            border-radius: 8px;
+            padding: 24px 24px 70px;
             text-align: center;
-            min-height: 280px;
+            height: 290px;
+            box-sizing: border-box;
             display: flex; flex-direction: column;
             align-items: center; gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: -58px;
         }
-        .guide-card-emoji { font-size: 68px; margin-bottom: 2px; }
+        .guide-card-emoji { font-size: 52px; margin-bottom: 0; }
         .guide-card-name {
             font-family: 'Pretendard', sans-serif;
-            font-size: 24px; font-weight: 700;
+            font-size: 17px; font-weight: 800;
             color: #000; margin: 0;
         }
         .guide-card-desc {
             font-family: 'Pretendard', sans-serif;
-            font-size: 15px; color: #666;
+            font-size: 11px; color: #666;
             line-height: 1.65; margin: 0;
         }
 
         /* ── 가이드 버튼 */
+        .st-key-landing_btn_daily,
+        .st-key-landing_btn_coaching {
+            padding: 0 24px 18px;
+        }
         [data-testid="stBaseButton-primary"] {
             background: #072f48 !important;
             color: #ffffff !important;
             border-radius: 100px !important;
-            height: 50px !important;
+            height: 28px !important;
             font-family: 'Pretendard', sans-serif !important;
-            font-size: 17px !important; font-weight: 700 !important;
+            font-size: 12px !important; font-weight: 800 !important;
             border: none !important;
         }
         [data-testid="stBaseButton-secondary"] {
             background: #ffffff !important;
             color: #072f48 !important;
-            border: 2.5px solid #072f48 !important;
+            border: 1.8px solid #072f48 !important;
             border-radius: 100px !important;
-            height: 50px !important;
+            height: 28px !important;
             font-family: 'Pretendard', sans-serif !important;
-            font-size: 17px !important; font-weight: 700 !important;
+            font-size: 12px !important; font-weight: 800 !important;
         }
 
         /* ── 반응형 */
         @media (max-width: 768px) {
             .landing-headline { font-size: 26px; }
+            [data-testid="stForm"] { padding: 18px 20px 22px !important; }
             .complete-banner  { flex-direction: column; gap: 18px; }
             .complete-sep     { width: 100%; height: 1px; }
             .guide-card       { min-height: auto; }
         }
         </style>
-        """,
+        """.replace("__BG_B64__", bg_b64)
+    st.markdown(
+        css,
         unsafe_allow_html=True,
     )

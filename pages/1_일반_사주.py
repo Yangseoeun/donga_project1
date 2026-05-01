@@ -1,12 +1,25 @@
 """일반 사주 — 데일리 리포트 전용 페이지."""
 
+import base64
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
 from core.daily_report_builder import build_daily_report
 from ui.styles import apply_custom_styles
 from utils.helpers import init_session_state
+
+# ── 이미지 경로
+_IMG_DIR = Path(__file__).parent.parent / "img" / "proj1_report"
+
+
+@st.cache_data
+def _img_b64(filename: str) -> str:
+    """이미지 파일을 base64로 인코딩하여 반환."""
+    with open(_IMG_DIR / filename, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
 
 # ── 오행별 색상 (데일리 리포트 디자인 토큰)
 _ELEMENT_COLORS: dict[str, str] = {
@@ -18,6 +31,9 @@ _ELEMENT_COLORS: dict[str, str] = {
 }
 _ELEMENT_KR: dict[str, str] = {
     "wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水",
+}
+_ELEMENT_SUB_KR: dict[str, str] = {
+    "wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수",
 }
 
 # ── 운세 섹션 메타
@@ -66,35 +82,73 @@ def _inject_css() -> None:
             font-size: 1.8rem; font-weight: 800;
             color: #1A374D; margin: 0 0 0.8rem;
         }
+        .st-key-chat_consult_button {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            padding-top: 108px;
+            margin-bottom: -2px;
+        }
+        .st-key-chat_consult_button [data-testid="stButton"] {
+            width: auto;
+            margin-left: auto;
+        }
+        .st-key-chat_consult_button .st-key-chat_consult_action {
+            display: flex !important;
+            justify-content: flex-end !important;
+            width: fit-content !important;
+            margin-left: auto !important;
+        }
+        .st-key-chat_consult_button [data-testid="stButton"] button {
+            width: auto !important;
+            min-height: 0 !important;
+            height: 22px !important;
+            padding: 0 10px !important;
+            border-radius: 999px !important;
+            background: #07314a !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+        }
+        .st-key-chat_consult_button [data-testid="stButton"] button p {
+            color: #ffffff !important;
+            font-size: 9px !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+        }
 
-        /* ── 상단 패널 */
-        .dr-top-panel {
-            background: #ffffff; border-radius: 20px;
-            padding: 1.5rem 1.8rem; margin-bottom: 1.1rem;
+        /* ── 프로필 카드 */
+        .dr-profile-card {
+            background: #ffffff; border-radius: 12px;
+            padding: 1.4rem 1.2rem;
+            min-height: 315px;
+            box-sizing: border-box;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
-        .dr-top-inner {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 2rem; align-items: end;
-        }
-
-        /* ── 프로필 */
         .dr-avatar {
-            width: 68px; height: 68px; border-radius: 50%;
+            width: 60px; height: 60px; border-radius: 50%;
             background: #dde3ec;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.7rem; margin-bottom: 0.55rem;
+            font-size: 1.5rem; margin-bottom: 0.5rem;
         }
-        .dr-profile-name { font-size: 1.05rem; font-weight: 700; color: #1A374D; margin: 0 0 0.15rem; }
-        .dr-profile-birth { font-size: 0.74rem; color: #8a94a6; margin-bottom: 0.8rem; }
-        .dr-pillar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem 0.7rem; }
-        .dr-pm-label { font-size: 0.69rem; color: #8a94a6; display: block; }
-        .dr-pm-value { font-size: 0.9rem; font-weight: 700; color: #1A374D; }
+        .dr-profile-name { font-size: 1rem; font-weight: 700; color: #1A374D; margin: 0 0 0.1rem; }
+        .dr-profile-birth { font-size: 0.72rem; color: #8a94a6; margin-bottom: 0.7rem; }
+        .dr-pillar-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem 0.5rem; }
+        .dr-pm-label { font-size: 0.68rem; color: #8a94a6; display: block; }
+        .dr-pm-value { font-size: 0.88rem; font-weight: 700; color: #1A374D; }
 
-        /* ── Balance Status */
+        /* ── Balance Status 카드 */
+        .dr-balance-card {
+            background: #ffffff; border-radius: 12px;
+            padding: 1.1rem 1.4rem 0.8rem;
+            min-height: 315px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
         .balance-title { font-size: 0.77rem; color: #8a94a6; font-weight: 600; margin-bottom: 0.7rem; }
-        .balance-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 240px; }
+        .balance-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 245px; }
         .balance-bar-col {
             display: flex; flex-direction: column;
             align-items: center; flex: 1;
@@ -182,10 +236,60 @@ def _inject_css() -> None:
         .dr-coaching-card li:last-child { border-bottom: none; }
         .dr-ck-key { font-weight: 700; white-space: nowrap; min-width: 5rem; color: #1A374D; }
 
+        /* ── 통합 리포트 박스 */
+        .dr-unified-report {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px 42px 34px;
+            margin: 1rem 0 1.2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .dr-unified-summary {
+            color: #07314a;
+            font-size: 1.18rem;
+            font-weight: 800;
+            line-height: 1.55;
+            margin: 0 0 34px;
+            text-align: center;
+        }
+        .dr-unified-section {
+            margin: 0 0 24px;
+        }
+        .dr-unified-section:last-child {
+            margin-bottom: 0;
+        }
+        .dr-unified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #a8e6ed;
+            border-radius: 999px;
+            color: #07314a;
+            font-size: 0.86rem;
+            font-weight: 800;
+            line-height: 1;
+            padding: 5px 14px;
+            margin: 0 0 8px;
+        }
+        .dr-unified-badge-primary {
+            background: #07314a;
+            color: #ffffff;
+        }
+        .dr-unified-text {
+            color: #222222;
+            font-size: 0.88rem;
+            line-height: 1.75;
+            margin: 0;
+        }
+        .dr-unified-text strong {
+            color: #111111;
+            font-weight: 800;
+        }
+
         @media (max-width: 720px) {
-            .dr-top-inner { grid-template-columns: 1fr; }
             .balance-bar-wrap { height: 130px; }
             .dr-coaching-grid { grid-template-columns: 1fr; }
+            .dr-unified-report { padding: 24px 20px; }
         }
         </style>
         """,
@@ -233,14 +337,15 @@ def _render_top_panel(saju, profile: dict) -> None:
                 <span class="balance-pct">{pct}%</span>
             </div>
             <div class="balance-lbl">{_ELEMENT_KR[en]}</div>
-            <div class="balance-lbl2">{en[:2]}</div>
+            <div class="balance-lbl2">{_ELEMENT_SUB_KR[en]}</div>
         </div>"""
 
-    st.markdown(
-        f"""
-        <div class="dr-top-panel">
-          <div class="dr-top-inner">
-            <div>
+    col_profile, col_balance = st.columns([1, 3])
+
+    with col_profile:
+        st.markdown(
+            f"""
+            <div class="dr-profile-card">
               <div class="dr-avatar">🧑</div>
               <p class="dr-profile-name">{escape(name)}</p>
               <p class="dr-profile-birth">{escape(birth_date)} {escape(birth_time)} | {cal}</p>
@@ -255,14 +360,20 @@ def _render_top_panel(saju, profile: dict) -> None:
                 <div><span class="dr-pm-label">시</span><span class="dr-pm-value">{escape(hr)}</span></div>
               </div>
             </div>
-            <div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_balance:
+        st.markdown(
+            f"""
+            <div class="dr-balance-card">
+              <div class="balance-title">Balance Status</div>
               <div class="balance-bar-wrap">{bars_html}</div>
             </div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def _render_fortune(detailed: dict) -> None:
@@ -282,10 +393,6 @@ def _render_fortune(detailed: dict) -> None:
 
 
 def _render_coaching(coaching: dict) -> None:
-    st.markdown(
-        '<div class="dr-slabel" style="margin-top:1.1rem;">라이프 코칭</div>',
-        unsafe_allow_html=True,
-    )
 
     cards_html = ""
     for key, icon_bg, icon_color, icon, title, fields in _COACHING_META:
@@ -307,6 +414,31 @@ def _render_coaching(coaching: dict) -> None:
     st.markdown(
         f'<div class="dr-coaching-grid">{cards_html}</div>',
         unsafe_allow_html=True
+    )
+
+
+def _render_unified_report(daily: dict) -> None:
+    summary = escape(daily.get("one_line_summary", ""))
+    detailed = daily.get("detailed_fortune", {})
+
+    sections_html = ""
+    for idx, (key, _color, icon, label) in enumerate(_FORTUNE_META):
+        badge_cls = "dr-unified-badge dr-unified-badge-primary" if idx == 0 else "dr-unified-badge"
+        sections_html += f"""
+        <section class="dr-unified-section">
+            <div class="{badge_cls}">{icon}&nbsp;{label}</div>
+            <p class="dr-unified-text">{escape(detailed.get(key, ""))}</p>
+        </section>
+        """
+
+    st.markdown(
+        f"""
+        <div class="dr-unified-report">
+            <p class="dr-unified-summary">“{summary}”</p>
+            {sections_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -335,28 +467,23 @@ if saju is None:
 # ── 헤더
 header_l, header_r = st.columns([3, 1])
 with header_l:
+    logo_b64 = _img_b64("로고.png")
     st.markdown(
-        '<div class="dr-logo-row">⚡ MY ENERGY-UP COACH</div>'
-        '<div class="dr-page-title">데일리 리포트</div>',
+        f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
+        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:6px;">데일리 리포트</div>',
         unsafe_allow_html=True,
     )
 with header_r:
-    st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
-    if st.button("💬 1:1 채팅 상담", use_container_width=True):
-        st.switch_page("pages/2_채팅_사주.py")
+    with st.container(key="chat_consult_button"):
+        if st.button("💬 1:1 채팅 상담", key="chat_consult_action"):
+            st.switch_page("pages/2_채팅_사주.py")
 
-st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
 
 # ── 본문
 daily = build_daily_report(saju)
 
 _render_top_panel(saju, profile)
-_render_fortune_summary = daily["one_line_summary"]
-st.markdown(
-    f'<div class="dr-summary-box"><p>{escape(_render_fortune_summary)}</p></div>',
-    unsafe_allow_html=True,
-)
-_render_fortune(daily["detailed_fortune"])
-st.markdown("<div style='height:0.2rem'></div>", unsafe_allow_html=True)
+_render_unified_report(daily)
 _render_coaching(daily["coaching"])
 
