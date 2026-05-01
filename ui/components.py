@@ -1,10 +1,21 @@
 """Reusable Streamlit UI components."""
 
+import base64
 from html import escape
+from pathlib import Path
 
 import streamlit as st
 
 from core.schemas import SajuResult
+
+
+_MAIN_IMG_DIR = Path(__file__).parent.parent / "img" / "proj1_main"
+
+
+@st.cache_data
+def _main_img_b64(filename: str) -> str:
+    with open(_MAIN_IMG_DIR / filename, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
 
 def render_intro_panel() -> None:
@@ -228,10 +239,13 @@ def render_landing_hero() -> None:
     랜딩 히어로 섹션 렌더링.
     로고 배지, 메인 태그라인, 브랜드 서브타이틀을 중앙 정렬로 표시한다.
     """
+    logo_b64 = _main_img_b64("Frame 40.png")
     st.markdown(
-        """
+        f"""
         <div class="landing-hero">
-            <div class="landing-logo-badge">🌿 &nbsp; MY ENERGY-UP COACH</div>
+            <div class="landing-logo-badge">
+                <img src="data:image/png;base64,{logo_b64}" alt="My Energy-Up Coach" />
+            </div>
             <h1 class="landing-headline">운명은 읽는 것이 아니라 리드하는 것입니다.</h1>
             <p class="landing-brand-line">
                 당신의 에너지를 깨워 오늘을 주도하는 기술,

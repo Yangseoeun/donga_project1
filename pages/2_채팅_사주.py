@@ -34,6 +34,7 @@ _ELEMENT_COLORS = {
     "earth": "#f4d383", "metal": "#ccc6bd", "water": "#146f8a",
 }
 _ELEMENT_KR = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+_ELEMENT_SUB_KR = {"wood": "목", "fire": "화", "earth": "토", "metal": "금", "water": "수"}
 _ELEM_ORDER = ["wood", "fire", "earth", "metal", "water"]
 
 # ── 모드 메타 (key, 이모지, 제목, 설명)
@@ -91,11 +92,49 @@ def _inject_css() -> None:
             font-size: 1.8rem; font-weight: 800;
             color: #1a2035; margin: 0 0 0.8rem;
         }
+        .st-key-reset_chat_button {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            padding-top: 108px;
+            margin-bottom: -2px;
+        }
+        .st-key-reset_chat_button [data-testid="stButton"] {
+            width: auto;
+            margin-left: auto;
+        }
+        .st-key-reset_chat_button .st-key-reset_chat_action {
+            display: flex !important;
+            justify-content: flex-end !important;
+            width: fit-content !important;
+            margin-left: auto !important;
+        }
+        .st-key-reset_chat_button [data-testid="stButton"] button {
+            width: auto !important;
+            min-height: 0 !important;
+            height: 22px !important;
+            padding: 0 10px !important;
+            border-radius: 999px !important;
+            background: #07314a !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 9px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+        }
+        .st-key-reset_chat_button [data-testid="stButton"] button p {
+            color: #ffffff !important;
+            font-size: 9px !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+        }
 
         /* ── 프로필 카드 */
         .cp-card {
             background: #ffffff; border-radius: 12px;
             padding: 1.4rem 1.2rem;
+            min-height: 315px;
+            box-sizing: border-box;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
         .cp-avatar {
@@ -114,10 +153,12 @@ def _inject_css() -> None:
         .bs-card {
             background: #ffffff; border-radius: 12px;
             padding: 1.1rem 1.4rem 0.8rem;
+            min-height: 315px;
+            box-sizing: border-box;
             box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
         .bs-title { font-size: 0.77rem; color: #8a94a6; font-weight: 600; margin-bottom: 0.6rem; }
-        .bs-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 180px; }
+        .bs-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 245px; }
         .bs-bar-col  {
             display: flex; flex-direction: column; align-items: center;
             flex: 1; height: 100%; justify-content: flex-end;
@@ -417,7 +458,7 @@ def _render_top_panel(saju, profile: dict) -> None:
                     <span class="bs-pct">{pct}%</span>
                 </div>
                 <div class="bs-lbl">{_ELEMENT_KR[en]}</div>
-                <div class="bs-lbl2">{en[:2]}</div>
+                <div class="bs-lbl2">{_ELEMENT_SUB_KR[en]}</div>
             </div>"""
 
         st.markdown(
@@ -547,21 +588,20 @@ if "prev_mode" not in st.session_state:
 header_l, header_r = st.columns([3, 1])
 with header_l:
     logo_b64  = _img_b64("로고.png")
-    title_b64 = _img_b64("1_1 코칭.png")
     st.markdown(
-        f'<img src="data:image/png;base64,{logo_b64}" style="height:52px; margin-bottom:10px; display:block;" />'
-        f'<img src="data:image/png;base64,{title_b64}" style="height:44px; display:block;" />',
+        f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
+        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:6px;">1:1코칭</div>',
         unsafe_allow_html=True,
     )
 with header_r:
-    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
-    if st.button("대화 초기화", use_container_width=True):
-        st.session_state["chat_history"] = []
-        st.session_state["current_mode"] = None
-        st.session_state["prev_mode"] = None
-        st.rerun()
+    with st.container(key="reset_chat_button"):
+        if st.button("대화 초기화", key="reset_chat_action"):
+            st.session_state["chat_history"] = []
+            st.session_state["current_mode"] = None
+            st.session_state["prev_mode"] = None
+            st.rerun()
 
-st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
 
 # ── 프로필 + Balance Status
 _render_top_panel(saju, profile)
