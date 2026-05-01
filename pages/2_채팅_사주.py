@@ -1,13 +1,16 @@
-"""Saju chatbot page."""
+"""Saju chatbot page — 1:1 코칭."""
 
+import base64
 import os
+from html import escape
+from pathlib import Path
 
 import streamlit as st
 
 from core.chat_engine import build_fallback_answer, run_chat, run_chat_stream
 from core.llm_client import LLMConfigurationError
 from core.prompt_templates import MODE_GREETING
-from ui.components import render_chat_message, render_context_preview
+from ui.components import render_chat_message
 from ui.styles import apply_custom_styles
 from utils.helpers import init_session_state
 from utils.logger import get_logger
@@ -15,27 +18,314 @@ from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-MODE_OPTIONS = [
-    ("business", "1. 비즈니스"),
-    ("love", "2. 연애"),
-    ("wealth", "3. 재물"),
-    ("study", "4. 학업"),
-    ("health", "5. 건강"),
+# ── 이미지 경로
+_IMG_DIR = Path(__file__).parent.parent / "img" / "proj1_report"
+
+
+@st.cache_data
+def _img_b64(filename: str) -> str:
+    """이미지 파일을 base64로 인코딩하여 반환."""
+    with open(_IMG_DIR / filename, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+# ── 오행 색상 (Figma 디자인 토큰)
+_ELEMENT_COLORS = {
+    "wood": "#9db26c", "fire": "#ff8985",
+    "earth": "#f4d383", "metal": "#ccc6bd", "water": "#146f8a",
+}
+_ELEMENT_KR = {"wood": "木", "fire": "火", "earth": "土", "metal": "金", "water": "水"}
+_ELEM_ORDER = ["wood", "fire", "earth", "metal", "water"]
+
+# ── 모드 메타 (key, 이모지, 제목, 설명)
+MODE_META = [
+    ("business", "🏢", "비즈니스", "계약 및 협상 테이블에서 승리하는 타이밍을 알려드립니다."),
+    ("love",     "❤️", "연애",    "고백, 데이트 등 실패 없는 실전 행동 지침을 코칭합니다."),
+    ("wealth",   "💰", "재물",    "돈이 들어오는 길목을 지키는 돈줄 전략을 공개합니다."),
+    ("study",    "📚", "학업",    "시험 합격 및 성적 향상을 위한 맞춤형 처방을 드립니다."),
+    ("health",   "💪", "건강",    "에너지 고갈을 막고 최상의 컨디션을 유지하는 법을 조언합니다."),
 ]
 
 
+# ---------------------------------------------------------------------------
+# CSS
+# ---------------------------------------------------------------------------
+def _inject_css() -> None:
+    st.markdown(
+        """
+        <style>
+        [data-testid="stMain"],
+        [data-testid="stMainBlockContainer"] {
+            background: #e9eff0 !important;
+        }
+        [data-testid="stAppViewContainer"] > .main { background: #E9F1F6; }
+        [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none; }
+
+        /* ── 로고 / 타이틀 */
+        .chat-logo-row {
+            color: #3b82a0; font-size: 0.76rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            margin-bottom: 0.2rem;
+        }
+        .chat-page-title {
+            font-size: 1.8rem; font-weight: 800;
+            color: #1a2035; margin: 0 0 0.8rem;
+        }
+
+        /* ── 프로필 카드 */
+        .cp-card {
+            background: #ffffff; border-radius: 12px;
+            padding: 1.4rem 1.2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .cp-avatar {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #dde3ec;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 0.5rem;
+        }
+        .cp-name  { font-size: 1rem; font-weight: 700; color: #1a2035; margin: 0 0 0.1rem; }
+        .cp-birth { font-size: 0.72rem; color: #8a94a6; margin-bottom: 0.7rem; }
+        .cp-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem 0.5rem; }
+        .cp-label { font-size: 0.68rem; color: #8a94a6; display: block; }
+        .cp-value { font-size: 0.88rem; font-weight: 700; color: #1a2035; }
+
+        /* ── Balance Status 카드 */
+        .bs-card {
+            background: #ffffff; border-radius: 12px;
+            padding: 1.1rem 1.4rem 0.8rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .bs-title { font-size: 0.77rem; color: #8a94a6; font-weight: 600; margin-bottom: 0.6rem; }
+        .bs-bar-wrap { display: flex; align-items: flex-end; gap: 0.5rem; height: 180px; }
+        .bs-bar-col  {
+            display: flex; flex-direction: column; align-items: center;
+            flex: 1; height: 100%; justify-content: flex-end;
+        }
+        .bs-bar  {
+            width: 100%; border-radius: 16px 16px 0 0; min-height: 20px;
+            display: flex; align-items: flex-start; justify-content: center;
+        }
+        .bs-pct  { font-size: 0.72rem; font-weight: 700; color: #fff; padding-top: 5px; }
+        .bs-lbl  { font-size: 0.8rem; color: #072f48; margin-top: 0.3rem; font-weight: 700; }
+        .bs-lbl2 { font-size: 0.7rem; color: #7a7a7a; }
+
+        /* ── 한줄 요약 배너 */
+        .chat-summary-bar {
+            background: #ffffff; border-radius: 12px;
+            padding: 1rem 1.8rem; text-align: center;
+            margin: 0.8rem 0 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .chat-summary-bar p {
+            font-size: 1rem; font-weight: 700;
+            color: #072f48; margin: 0; line-height: 1.5;
+        }
+
+        /* ── 모드 질문 배너 */
+        .mode-question-banner {
+            background: #146f8a; border-radius: 16px;
+            padding: 1.1rem 2.5rem; text-align: center;
+            margin: 1rem 0 0.6rem;
+        }
+        .mode-question-banner p {
+            font-size: 1.05rem; font-weight: 700; color: #e9eff0; margin: 0;
+        }
+
+        /* ── 모드 카드 */
+        .mode-card {
+            background: #ffffff; border-radius: 24px;
+            padding: 1.2rem 1rem; text-align: left;
+            border: 2.5px solid transparent;
+            min-height: 200px;
+            cursor: pointer;
+            transition: box-shadow 0.15s ease;
+        }
+        .mode-card:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+        }
+        .mode-card-selected {
+            background: #ffffff; border-radius: 24px;
+            padding: 1.2rem 1rem; text-align: left;
+            border: 3px solid #1A374D;
+            min-height: 200px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(26,55,77,0.15);
+        }
+        .mode-card-icon {
+            background: #f5f7fa; border-radius: 14px;
+            width: 58px; height: 58px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin-bottom: 0.7rem;
+        }
+        .mode-card-title { font-size: 0.95rem; font-weight: 700; color: #292929; margin: 0 0 0.35rem; }
+        .mode-card-desc  { font-size: 0.75rem; color: #6e6e6e; line-height: 1.55; margin: 0; }
+
+        /* ── 모드 카드 투명 오버레이 버튼 (카드 전체를 클릭 영역으로) */
+        [data-testid="stMarkdownContainer"]:has(.mode-card) + [data-testid="stButton"] button,
+        [data-testid="stMarkdownContainer"]:has(.mode-card-selected) + [data-testid="stButton"] button {
+            opacity: 0 !important;
+            margin-top: -215px !important;
+            height: 215px !important;
+            cursor: pointer !important;
+            background: transparent !important;
+            border: none !important;
+            position: relative;
+            z-index: 10;
+            display: block;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .bs-bar-wrap { height: 120px; }
+            .mode-card, .mode-card-selected { min-height: auto; }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 렌더링 헬퍼
+# ---------------------------------------------------------------------------
+def _pct(val: int, total: int) -> int:
+    return round(val / total * 100) if total > 0 else 0
+
+
+def _render_top_panel(saju, profile: dict) -> None:
+    name       = escape(profile.get("name") or "익명")
+    birth_date = escape(profile.get("birth_date", ""))
+    birth_time = escape(profile.get("birth_time", ""))
+    cal        = "양력" if profile.get("calendar_type") == "solar" else "음력"
+    day_master = escape(saju.day_master or "미정")
+    yongsin    = escape(saju.yongsin   or "미정")
+    gisin      = escape(saju.gisin     or "미정")
+    yr  = escape(saju.year_pillar  or "-")
+    mo  = escape(saju.month_pillar or "-")
+    day = escape(saju.day_pillar   or "-")
+    hr  = escape(saju.hour_pillar  or "-")
+
+    col_profile, col_balance = st.columns([1, 3])
+
+    with col_profile:
+        st.markdown(
+            f"""
+            <div class="cp-card">
+              <div class="cp-avatar">🧑</div>
+              <p class="cp-name">{name}</p>
+              <p class="cp-birth">{birth_date} {birth_time} | {cal}</p>
+              <div class="cp-grid">
+                <div><span class="cp-label">일간</span><span class="cp-value">{day_master}</span></div>
+                <div><span class="cp-label">용신</span><span class="cp-value">{yongsin}</span></div>
+                <div><span class="cp-label">기신</span><span class="cp-value">{gisin}</span></div>
+                <div><span class="cp-label">연</span><span class="cp-value">{yr}</span></div>
+                <div><span class="cp-label">월</span><span class="cp-value">{mo}</span></div>
+                <div></div>
+                <div><span class="cp-label">일</span><span class="cp-value">{day}</span></div>
+                <div><span class="cp-label">시</span><span class="cp-value">{hr}</span></div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col_balance:
+        elems = saju.five_elements
+        total = sum(elems.values()) or 1
+        bars_html = ""
+        for en in _ELEM_ORDER:
+            color    = _ELEMENT_COLORS[en]
+            pct      = _pct(elems.get(en, 0), total)
+            height   = max(int(pct * 1.6), 20)
+            gradient = (
+                f"linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.4) 100%), "
+                f"linear-gradient(to left, {color}, {color})"
+            )
+            bars_html += f"""
+            <div class="bs-bar-col">
+                <div class="bs-bar" style="background:{gradient};height:{height}px;">
+                    <span class="bs-pct">{pct}%</span>
+                </div>
+                <div class="bs-lbl">{_ELEMENT_KR[en]}</div>
+                <div class="bs-lbl2">{en[:2]}</div>
+            </div>"""
+
+        st.markdown(
+            f"""
+            <div class="bs-card">
+              <div class="bs-title">Balance Status</div>
+              <div class="bs-bar-wrap">{bars_html}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def _render_summary_bar(saju) -> None:
+    summary = getattr(saju, "summary", None)
+    if not summary:
+        return
+    st.markdown(
+        f'<div class="chat-summary-bar"><p>"{escape(summary)}"</p></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _render_mode_section(selected_mode: str) -> str:
+    st.markdown(
+        '<div class="mode-question-banner">'
+        '<p>오늘 집중적인 코칭이 필요한 영역이 무엇인가요?</p>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    cols = st.columns(len(MODE_META))
+    for idx, (mode_key, icon, title, desc) in enumerate(MODE_META):
+        card_cls = "mode-card-selected" if selected_mode == mode_key else "mode-card"
+        with cols[idx]:
+            # 시각적 카드 렌더링
+            st.markdown(
+                f"""
+                <div class="{card_cls}">
+                    <div class="mode-card-icon">{icon}</div>
+                    <p class="mode-card-title">{title}</p>
+                    <p class="mode-card-desc">{desc}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            # 투명 오버레이 버튼 — CSS로 카드 위에 겹쳐 클릭 영역 처리
+            if st.button(
+                "​",  # zero-width space (라벨 없음)
+                key=f"mode_btn_{mode_key}",
+                use_container_width=True,
+            ):
+                if st.session_state.get("prev_mode") != mode_key:
+                    greeting = MODE_GREETING.get(mode_key, "")
+                    if greeting:
+                        st.session_state["chat_history"].append(
+                            {"role": "assistant", "content": greeting}
+                        )
+                    st.session_state["prev_mode"] = mode_key
+                st.session_state["current_mode"] = mode_key
+                selected_mode = mode_key
+    return selected_mode
+
+
+# ===========================================================================
+# 메인
+# ===========================================================================
 st.set_page_config(
-    page_title="채팅 사주",
+    page_title="1:1 코칭",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 init_session_state()
 apply_custom_styles()
+_inject_css()
 
-st.title("채팅 사주")
-
-saju = st.session_state.get("user_saju")
+saju    = st.session_state.get("user_saju")
 profile = st.session_state.get("birth_profile", {})
 
 if saju is None:
@@ -44,58 +334,44 @@ if saju is None:
         st.switch_page("app.py")
     st.stop()
 
-top_left, top_right = st.columns([2, 1])
-with top_left:
-    st.caption(
-        f"현재 사주 컨텍스트: {saju.day_master or '미정'} / "
-        f"용신 {saju.yongsin or '미정'} / "
-        f"입력자 {profile.get('name') or '익명'}"
+if "prev_mode" not in st.session_state:
+    st.session_state["prev_mode"] = None
+
+# ── 헤더
+header_l, header_r = st.columns([3, 1])
+with header_l:
+    logo_b64  = _img_b64("로고.png")
+    title_b64 = _img_b64("1_1 코칭.png")
+    st.markdown(
+        f'<img src="data:image/png;base64,{logo_b64}" style="height:36px; margin-bottom:10px; display:block;" />'
+        f'<img src="data:image/png;base64,{title_b64}" style="height:44px; display:block;" />',
+        unsafe_allow_html=True,
     )
-with top_right:
+with header_r:
+    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
     if st.button("대화 초기화", use_container_width=True):
         st.session_state["chat_history"] = []
         st.rerun()
 
-render_context_preview(saju)
+st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <div class="choice-panel">
-        <p>오늘 어떤 게 가장 고민인가요?</p>
-        <p class="choice-hint">(선택지 노출: 1. 비즈니스 / 2. 연애 / 3. 재물 / 4. 학업 / 5. 건강)</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# ── 프로필 + Balance Status
+_render_top_panel(saju, profile)
 
-if "prev_mode" not in st.session_state:
-    st.session_state["prev_mode"] = None
+# ── 한줄 요약
+_render_summary_bar(saju)
 
+# ── 모드 선택
 selected_mode = st.session_state.get("current_mode", "business")
-mode_cols = st.columns(len(MODE_OPTIONS))
-for index, (mode_key, mode_label) in enumerate(MODE_OPTIONS):
-    with mode_cols[index]:
-        if st.button(
-            mode_label,
-            type="primary" if selected_mode == mode_key else "secondary",
-            use_container_width=True,
-        ):
-            # 이전과 다른 모드로 전환될 때만 인사말 주입
-            if st.session_state["prev_mode"] != mode_key:
-                greeting = MODE_GREETING.get(mode_key, "")
-                if greeting:
-                    st.session_state["chat_history"].append(
-                        {"role": "assistant", "content": greeting}
-                    )
-                st.session_state["prev_mode"] = mode_key
-            st.session_state["current_mode"] = mode_key
-            selected_mode = mode_key
+selected_mode = _render_mode_section(selected_mode)
 
 stream_enabled = os.getenv("STREAM_ENABLED", "true").lower() == "true"
 
+# ── 채팅 히스토리
 for message in st.session_state["chat_history"]:
     render_chat_message(message["role"], message["content"])
 
+# ── 입력창
 user_input = st.chat_input("궁금한 사주 상담 내용을 입력하세요")
 
 if user_input:

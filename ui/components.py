@@ -215,3 +215,131 @@ def render_chat_message(role: str, content: str) -> None:
         f"<div class='{css_class}'><strong>{speaker}</strong><br>{escape(content)}</div>",
         unsafe_allow_html=True,
     )
+
+
+# ===========================================================================
+# 랜딩 페이지 전용 컴포넌트 (app.py에서만 호출)
+# CSS는 ui/styles.py의 apply_landing_styles() 에서 관리
+# ===========================================================================
+
+
+def render_landing_hero() -> None:
+    """
+    랜딩 히어로 섹션 렌더링.
+    로고 배지, 메인 태그라인, 브랜드 서브타이틀을 중앙 정렬로 표시한다.
+    """
+    st.markdown(
+        """
+        <div class="landing-hero">
+            <div class="landing-logo-badge">🌿 &nbsp; MY ENERGY-UP COACH</div>
+            <h1 class="landing-headline">운명은 읽는 것이 아니라 리드하는 것입니다.</h1>
+            <p class="landing-brand-line">
+                당신의 에너지를 깨워 오늘을 주도하는 기술,
+                <strong>My Energy-Up Coach</strong>
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_input_complete_banner(profile: dict, saju: "SajuResult") -> None:
+    """
+    정보 입력 완료 다크 네이비 배너 렌더링.
+    이름·생년월일시·일간·용신 4개 항목을 아이콘 원형과 함께 가로로 표시한다.
+
+    Args:
+        profile: st.session_state["birth_profile"] 딕셔너리.
+        saju:    SajuResult 객체.
+    """
+    name       = escape(profile.get("name") or "익명")
+    birth_date = escape(profile.get("birth_date", ""))
+    birth_time = escape(profile.get("birth_time", ""))
+    day_master = escape(saju.day_master or "미정")
+    yongsin    = escape(saju.yongsin or "미정")
+
+    st.markdown(
+        f"""
+        <div class="complete-banner">
+            <div class="complete-item">
+                <div class="complete-icon-circle">👤</div>
+                <div>
+                    <p class="complete-text-label">이름</p>
+                    <p class="complete-text-value">{name}</p>
+                </div>
+            </div>
+            <div class="complete-sep"></div>
+            <div class="complete-item">
+                <div class="complete-icon-circle">📅</div>
+                <div>
+                    <p class="complete-text-label">생년월일시</p>
+                    <p class="complete-text-value">{birth_date}&nbsp;|&nbsp;{birth_time}</p>
+                </div>
+            </div>
+            <div class="complete-sep"></div>
+            <div class="complete-item">
+                <div class="complete-icon-circle">🔑</div>
+                <div>
+                    <p class="complete-text-label">일간</p>
+                    <p class="complete-text-value">{day_master}</p>
+                </div>
+            </div>
+            <div class="complete-sep"></div>
+            <div class="complete-item">
+                <div class="complete-icon-circle">🗝️</div>
+                <div>
+                    <p class="complete-text-label">용신</p>
+                    <p class="complete-text-value">{yongsin}</p>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_guide_section() -> None:
+    """
+    '종합 분석 & 가이드' 2-컬럼 카드 섹션 렌더링.
+    왼쪽: 데일리 리포트 (primary 버튼)
+    오른쪽: 1:1 코칭 (secondary 버튼 — outline 스타일)
+    """
+    st.markdown(
+        '<div class="guide-title">종합 분석 &amp; 가이드</div>',
+        unsafe_allow_html=True,
+    )
+
+    col_left, col_right = st.columns(2, gap="large")
+
+    with col_left:
+        st.markdown(
+            """
+            <div class="guide-card">
+                <div class="guide-card-emoji">📋</div>
+                <p class="guide-card-name">종합 분석 &amp; 가이드</p>
+                <p class="guide-card-desc">
+                    타고난 기운과 오늘의 흐름을<br>
+                    데이터로 정밀 분석한 나만의 리포트입니다.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("데일리 리포트", type="primary", use_container_width=True, key="landing_btn_daily"):
+            st.switch_page("pages/1_일반_사주.py")
+
+    with col_right:
+        st.markdown(
+            """
+            <div class="guide-card">
+                <div class="guide-card-emoji">👥</div>
+                <p class="guide-card-name">타겟팅 솔루션 &amp; 대화</p>
+                <p class="guide-card-desc">
+                    가장 궁금한 지점을 선택하여 심층 상담합니다.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("1:1 코칭", use_container_width=True, key="landing_btn_coaching"):
+            st.switch_page("pages/2_채팅_사주.py")
