@@ -10,7 +10,6 @@ import streamlit as st
 from core.chat_engine import build_fallback_answer, run_chat, run_chat_stream
 from core.llm_client import LLMConfigurationError
 from core.prompt_templates import MODE_GREETING
-from ui.components import render_chat_message
 from ui.styles import apply_custom_styles
 from utils.helpers import init_session_state
 from utils.logger import get_logger
@@ -60,6 +59,27 @@ def _inject_css() -> None:
         }
         [data-testid="stAppViewContainer"] > .main { background: #E9F1F6; }
         [data-testid="stSidebar"], [data-testid="collapsedControl"] { display: none; }
+        [data-testid="stBottomBlockContainer"] {
+            background: #e9eff0 !important;
+        }
+        [data-testid="stBottomBlockContainer"] [data-testid="stChatInput"] {
+            background: #a5bec3 !important;
+            border-radius: 10px !important;
+            border: none !important;
+        }
+        [data-testid="stBottomBlockContainer"] [data-testid="stChatInput"] > div,
+        [data-testid="stBottomBlockContainer"] .st-emotion-cache-mjrxj2 {
+            background: #a5bec3 !important;
+            border-radius: 10px !important;
+            border: none !important;
+        }
+        [data-testid="stBottomBlockContainer"] textarea {
+            background: #a5bec3 !important;
+            color: #ffffff !important;
+        }
+        [data-testid="stBottomBlockContainer"] textarea::placeholder {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
 
         /* ── 로고 / 타이틀 */
         .chat-logo-row {
@@ -137,20 +157,28 @@ def _inject_css() -> None:
             background: #ffffff; border-radius: 24px;
             padding: 1.2rem 1rem; text-align: left;
             border: 2.5px solid transparent;
-            min-height: 200px;
+            height: 200px;
+            box-sizing: border-box;
             cursor: pointer;
-            transition: box-shadow 0.15s ease;
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
         }
         .mode-card:hover {
             box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+            transform: translateY(-2px);
         }
         .mode-card-selected {
             background: #ffffff; border-radius: 24px;
             padding: 1.2rem 1rem; text-align: left;
             border: 3px solid #1A374D;
-            min-height: 200px;
+            height: 200px;
+            box-sizing: border-box;
             cursor: pointer;
             box-shadow: 0 4px 18px rgba(26,55,77,0.15);
+            transition: box-shadow 0.15s ease, transform 0.15s ease;
+        }
+        .mode-card-selected:hover {
+            box-shadow: 0 6px 22px rgba(26,55,77,0.20);
+            transform: translateY(-2px);
         }
         .mode-card-icon {
             background: #f5f7fa; border-radius: 14px;
@@ -161,24 +189,165 @@ def _inject_css() -> None:
         .mode-card-title { font-size: 0.95rem; font-weight: 700; color: #292929; margin: 0 0 0.35rem; }
         .mode-card-desc  { font-size: 0.75rem; color: #6e6e6e; line-height: 1.55; margin: 0; }
 
-        /* ── 모드 카드 투명 오버레이 버튼 (카드 전체를 클릭 영역으로) */
-        [data-testid="stMarkdownContainer"]:has(.mode-card) + [data-testid="stButton"] button,
-        [data-testid="stMarkdownContainer"]:has(.mode-card-selected) + [data-testid="stButton"] button {
-            opacity: 0 !important;
-            margin-top: -215px !important;
-            height: 215px !important;
-            cursor: pointer !important;
-            background: transparent !important;
-            border: none !important;
-            position: relative;
-            z-index: 10;
-            display: block;
+        .chat-thread-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 18px 0;
             width: 100%;
+        }
+        .chat-thread-row-ai {
+            justify-content: flex-start;
+        }
+        .chat-thread-row-user {
+            justify-content: flex-end;
+        }
+        .chat-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 52px;
+            color: #ffffff;
+            font-size: 1.55rem;
+            font-weight: 700;
+        }
+        .chat-avatar-ai {
+            background: #146f8a;
+        }
+        .chat-avatar-user {
+            background: #d7d7d7;
+            color: #ffffff;
+            order: 2;
+        }
+        .chat-bubble {
+            background: #ffffff;
+            border: none;
+            border-radius: 8px;
+            color: #111111;
+            line-height: 1.75;
+            padding: 18px 22px;
+            font-size: 0.92rem;
+            box-shadow: none;
+            white-space: normal;
+        }
+        .chat-bubble-ai {
+            max-width: 760px;
+        }
+        .chat-bubble-user {
+            max-width: 560px;
+            order: 1;
+        }
+        .chat-bubble strong {
+            color: #111111;
+            display: none;
+        }
+        .stream-chat-row {
+            margin: 18px 0;
+        }
+        .stream-chat-row [data-testid="stHorizontalBlock"] {
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .stream-chat-row [data-testid="column"]:first-child {
+            flex: 0 0 52px !important;
+            width: 52px !important;
+            min-width: 52px !important;
+        }
+        .stream-chat-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            background: #146f8a;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.55rem;
+            font-weight: 700;
+        }
+        .st-key-stream_ai_bubble {
+            background: #ffffff;
+            border: none;
+            border-radius: 8px;
+            color: #111111;
+            line-height: 1.75;
+            padding: 18px 22px;
+            max-width: 760px;
+            box-shadow: none;
+        }
+        .st-key-stream_ai_bubble [data-testid="stMarkdownContainer"],
+        .st-key-stream_ai_bubble [data-testid="stMarkdownContainer"] * {
+            color: #111111 !important;
+            line-height: 1.75;
+        }
+        .st-key-stream_ai_bubble [data-testid="stMarkdownContainer"] p:first-child {
+            margin-top: 0;
+        }
+        .st-key-stream_ai_bubble [data-testid="stMarkdownContainer"] p:last-child {
+            margin-bottom: 0;
+        }
+
+        .st-key-mode_picker [data-testid="stButton"] {
+            height: 200px;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button {
+            width: 100% !important;
+            height: 200px !important;
+            min-height: 200px !important;
+            display: block !important;
+            padding: 1.2rem 1rem !important;
+            border-radius: 24px !important;
+            border: 2.5px solid transparent !important;
+            background: #ffffff !important;
+            color: #292929 !important;
+            box-shadow: none !important;
+            text-align: left !important;
+            white-space: normal !important;
+            transition: box-shadow 0.15s ease, transform 0.15s ease !important;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,0.10) !important;
+            transform: translateY(-2px);
+            border-color: transparent !important;
+            color: #292929 !important;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button:focus {
+            border-color: #1A374D !important;
+            box-shadow: 0 4px 18px rgba(26,55,77,0.15) !important;
+            color: #292929 !important;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button [data-testid="stMarkdownContainer"] {
+            width: 100%;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button p {
+            color: inherit !important;
+            line-height: 1.55 !important;
+            margin: 0 !important;
+            text-align: left !important;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button p:first-child {
+            font-size: 1.8rem !important;
+            line-height: 1 !important;
+            margin-bottom: 0.8rem !important;
+        }
+        .st-key-mode_picker [data-testid="stButton"] button strong {
+            display: block;
+            font-size: 0.95rem;
+            line-height: 1.35;
+            margin-bottom: 0.35rem;
         }
 
         @media (max-width: 768px) {
             .bs-bar-wrap { height: 120px; }
-            .mode-card, .mode-card-selected { min-height: auto; }
+            .mode-card, .mode-card-selected { height: 160px; }
+            .st-key-mode_picker [data-testid="stButton"],
+            .st-key-mode_picker [data-testid="stButton"] button {
+                height: 160px !important;
+                min-height: 160px !important;
+            }
         }
         </style>
         """,
@@ -272,44 +441,81 @@ def _render_summary_bar(saju) -> None:
     )
 
 
-def _render_mode_section(selected_mode: str) -> str:
+def _render_chat_bubble(role: str, content: str) -> None:
+    safe_content = escape(content).replace("\n", "<br>")
+    if role == "user":
+        st.markdown(
+            f"""
+            <div class="chat-thread-row chat-thread-row-user">
+                <div class="chat-avatar chat-avatar-user">◇</div>
+                <div class="chat-bubble chat-bubble-user">{safe_content}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
+
     st.markdown(
-        '<div class="mode-question-banner">'
-        '<p>오늘 집중적인 코칭이 필요한 영역이 무엇인가요?</p>'
-        '</div>',
+        f"""
+        <div class="chat-thread-row chat-thread-row-ai">
+            <div class="chat-avatar chat-avatar-ai">♧</div>
+            <div class="chat-bubble chat-bubble-ai">{safe_content}</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-    cols = st.columns(len(MODE_META))
-    for idx, (mode_key, icon, title, desc) in enumerate(MODE_META):
-        card_cls = "mode-card-selected" if selected_mode == mode_key else "mode-card"
-        with cols[idx]:
-            # 시각적 카드 렌더링
-            st.markdown(
-                f"""
-                <div class="{card_cls}">
-                    <div class="mode-card-icon">{icon}</div>
-                    <p class="mode-card-title">{title}</p>
-                    <p class="mode-card-desc">{desc}</p>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            # 투명 오버레이 버튼 — CSS로 카드 위에 겹쳐 클릭 영역 처리
-            if st.button(
-                "​",  # zero-width space (라벨 없음)
-                key=f"mode_btn_{mode_key}",
-                use_container_width=True,
-            ):
-                if st.session_state.get("prev_mode") != mode_key:
-                    greeting = MODE_GREETING.get(mode_key, "")
-                    if greeting:
-                        st.session_state["chat_history"].append(
-                            {"role": "assistant", "content": greeting}
-                        )
-                    st.session_state["prev_mode"] = mode_key
-                st.session_state["current_mode"] = mode_key
-                selected_mode = mode_key
-    return selected_mode
+
+
+def _write_streaming_ai_bubble(chunks) -> str:
+    st.markdown('<div class="stream-chat-row">', unsafe_allow_html=True)
+    icon_col, bubble_col = st.columns([0.07, 0.93])
+    with icon_col:
+        st.markdown('<div class="stream-chat-avatar">♧</div>', unsafe_allow_html=True)
+    with bubble_col:
+        with st.container(key="stream_ai_bubble"):
+            answer = st.write_stream(chunks)
+    st.markdown("</div>", unsafe_allow_html=True)
+    return answer
+
+
+def _get_mode_meta(mode_key: str) -> tuple[str, str, str, str] | None:
+    return next((item for item in MODE_META if item[0] == mode_key), None)
+
+
+def _select_mode(mode_key: str) -> None:
+    st.session_state["current_mode"] = mode_key
+    st.session_state["prev_mode"] = mode_key
+    st.rerun()
+
+
+def _render_mode_section() -> str | None:
+    mode_placeholder = st.empty()
+    current_mode = st.session_state.get("current_mode")
+
+    if not _get_mode_meta(current_mode):
+        st.session_state["current_mode"] = None
+        current_mode = None
+
+    with mode_placeholder.container():
+        st.markdown(
+            '<div class="mode-question-banner">'
+            '<p>오늘 집중적인 코칭이 필요한 영역이 무엇인가요?</p>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        with st.container(key="mode_picker"):
+            cols = st.columns(len(MODE_META))
+            for idx, (mode_key, icon, title, desc) in enumerate(MODE_META):
+                with cols[idx]:
+                    if st.button(
+                        f"{icon}\n\n**{title}**\n\n{desc}",
+                        key=f"mode_btn_{mode_key}",
+                        use_container_width=True,
+                    ):
+                        mode_placeholder.empty()
+                        _select_mode(mode_key)
+
+    return current_mode
 
 
 # ===========================================================================
@@ -343,7 +549,7 @@ with header_l:
     logo_b64  = _img_b64("로고.png")
     title_b64 = _img_b64("1_1 코칭.png")
     st.markdown(
-        f'<img src="data:image/png;base64,{logo_b64}" style="height:36px; margin-bottom:10px; display:block;" />'
+        f'<img src="data:image/png;base64,{logo_b64}" style="height:52px; margin-bottom:10px; display:block;" />'
         f'<img src="data:image/png;base64,{title_b64}" style="height:44px; display:block;" />',
         unsafe_allow_html=True,
     )
@@ -351,6 +557,8 @@ with header_r:
     st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
     if st.button("대화 초기화", use_container_width=True):
         st.session_state["chat_history"] = []
+        st.session_state["current_mode"] = None
+        st.session_state["prev_mode"] = None
         st.rerun()
 
 st.markdown("<div style='height:0.3rem'></div>", unsafe_allow_html=True)
@@ -362,42 +570,48 @@ _render_top_panel(saju, profile)
 _render_summary_bar(saju)
 
 # ── 모드 선택
-selected_mode = st.session_state.get("current_mode", "business")
-selected_mode = _render_mode_section(selected_mode)
+selected_mode = _render_mode_section()
+if selected_mode is None:
+    st.stop()
 
 stream_enabled = os.getenv("STREAM_ENABLED", "true").lower() == "true"
 
+# ── 현재 모드 안내 말풍선 (chat_history에 누적하지 않음)
+mode_greeting = MODE_GREETING.get(selected_mode, "")
+if mode_greeting:
+    _render_chat_bubble("assistant", mode_greeting)
+
 # ── 채팅 히스토리
 for message in st.session_state["chat_history"]:
-    render_chat_message(message["role"], message["content"])
+    _render_chat_bubble(message["role"], message["content"])
 
 # ── 입력창
 user_input = st.chat_input("궁금한 사주 상담 내용을 입력하세요")
 
 if user_input:
     st.session_state["chat_history"].append({"role": "user", "content": user_input})
-    render_chat_message("user", user_input)
+    _render_chat_bubble("user", user_input)
 
     try:
         with st.spinner("사주 컨텍스트를 바탕으로 답변을 생성하는 중입니다..."):
             prior_history = st.session_state["chat_history"][:-1]
             if stream_enabled:
                 chunks = run_chat_stream(saju, prior_history, user_input, selected_mode)
-                answer = st.write_stream(chunks)
+                answer = _write_streaming_ai_bubble(chunks)
             else:
                 answer = run_chat(saju, prior_history, user_input, selected_mode)
-                render_chat_message("assistant", answer)
+                _render_chat_bubble("assistant", answer)
         st.session_state["chat_history"].append({"role": "assistant", "content": answer})
         st.session_state["consultation_count"] += 1
     except LLMConfigurationError as error:
         logger.warning("LLM 설정 오류: %s", error)
         answer = build_fallback_answer(saju, user_input)
         st.warning(".env에 OPENAI_API_KEY를 설정하면 실제 AI 상담을 사용할 수 있습니다. 지금은 로컬 요약 답변을 표시합니다.")
-        render_chat_message("assistant", answer)
+        _render_chat_bubble("assistant", answer)
         st.session_state["chat_history"].append({"role": "assistant", "content": answer})
     except Exception as error:
         logger.error("채팅 응답 실패: %s", error)
         answer = build_fallback_answer(saju, user_input)
         st.warning("AI API 연결이 잠시 실패해서 로컬 요약 답변을 표시합니다.")
-        render_chat_message("assistant", answer)
+        _render_chat_bubble("assistant", answer)
         st.session_state["chat_history"].append({"role": "assistant", "content": answer})
