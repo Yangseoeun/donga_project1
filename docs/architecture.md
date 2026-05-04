@@ -2,7 +2,7 @@
 
 ## Conflict-Minimized Ownership
 
-- Frontend: `app.py`, `pages/`, `ui/`
+- Frontend: `app.py`, `views/`, `ui/`
 - Backend A: `core/saju_calculator.py`, `core/result_builder.py`
 - Backend B: `core/llm_client.py`, `core/chat_engine.py`, `core/prompt_templates.py`
 - Shared: `core/schemas.py`

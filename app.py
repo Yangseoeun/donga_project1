@@ -12,6 +12,8 @@ from ui.components import (
 )
 from ui.styles import apply_landing_styles
 from utils.helpers import init_session_state
+from views.chat_view import render_chat_page
+from views.report_view import render_report_page
 
 
 st.set_page_config(
@@ -22,6 +24,15 @@ st.set_page_config(
 )
 
 init_session_state()
+
+active_view = st.session_state.get("active_view", "home")
+if active_view == "report":
+    render_report_page()
+    st.stop()
+if active_view == "chat":
+    render_chat_page()
+    st.stop()
+
 apply_landing_styles()
 
 profile = st.session_state.get("birth_profile", {})
@@ -50,7 +61,7 @@ render_landing_hero()
 # ── 입력 폼 (중앙 정렬: 좌우 여백 컬럼으로 구현)
 _, form_col, _ = st.columns([0.75, 2.5, 0.75])
 with form_col:
-    with st.form("birth_profile_form"):
+    with st.container(key="birth_profile_panel"):
         st.markdown(
             '<p class="form-desc">생년월일을 입력한 뒤 원하는 방식으로 상담을 시작하세요.</p>',
             unsafe_allow_html=True,
@@ -84,10 +95,11 @@ with form_col:
         with col_d:
             birth_time = st.time_input("출생 시간", value=default_birth_time)
 
-        submitted = st.form_submit_button(
+        submitted = st.button(
             "정보 입력 완료",
             type="primary",
             use_container_width=True,
+            key="birth_profile_submit",
         )
 
     if submitted:

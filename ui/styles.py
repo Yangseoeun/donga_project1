@@ -290,7 +290,7 @@ def apply_landing_styles() -> None:
         }
 
         /* ── 폼 컨테이너 카드 (glassmorphism) */
-        [data-testid="stForm"] {
+        .st-key-birth_profile_panel {
             background: rgba(255, 255, 255, 0.72) !important;
             border-radius: 12px !important;
             padding: 20px 140px 24px !important;
@@ -449,7 +449,7 @@ def apply_landing_styles() -> None:
         }
 
         /* ── 폼 제출 버튼 */
-        [data-testid="stFormSubmitButton"] > button {
+        .st-key-birth_profile_submit button {
             background: #072f48 !important;
             color: #ffffff !important;
             border-radius: 100px !important;
@@ -555,7 +555,7 @@ def apply_landing_styles() -> None:
         /* ── 반응형 */
         @media (max-width: 768px) {
             .landing-headline { font-size: 26px; }
-            [data-testid="stForm"] { padding: 18px 20px 22px !important; }
+            .st-key-birth_profile_panel { padding: 18px 20px 22px !important; }
             .complete-banner  { flex-direction: column; gap: 18px; }
             .complete-sep     { width: 100%; height: 1px; }
             .guide-card       { min-height: auto; }

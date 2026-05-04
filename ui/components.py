@@ -81,9 +81,13 @@ def render_quick_links() -> None:
     """
     col1, col2 = st.columns(2)
     with col1:
-        st.page_link("pages/1_일반_사주.py", label="일반 사주 리포트", icon="📋")
+        if st.button("📋 일반 사주 리포트", use_container_width=True):
+            st.session_state["active_view"] = "report"
+            st.rerun()
     with col2:
-        st.page_link("pages/2_채팅_사주.py", label="AI 사주 채팅", icon="💬")
+        if st.button("💬 AI 사주 채팅", use_container_width=True):
+            st.session_state["active_view"] = "chat"
+            st.rerun()
 
 
 def render_connection_flow() -> None:
@@ -340,7 +344,8 @@ def render_guide_section() -> None:
             unsafe_allow_html=True,
         )
         if st.button("데일리 리포트", type="primary", use_container_width=True, key="landing_btn_daily"):
-            st.switch_page("pages/1_일반_사주.py")
+            st.session_state["active_view"] = "report"
+            st.rerun()
 
     with col_right:
         st.markdown(
@@ -356,4 +361,5 @@ def render_guide_section() -> None:
             unsafe_allow_html=True,
         )
         if st.button("1:1 코칭", use_container_width=True, key="landing_btn_coaching"):
-            st.switch_page("pages/2_채팅_사주.py")
+            st.session_state["active_view"] = "chat"
+            st.rerun()

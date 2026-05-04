@@ -51,10 +51,11 @@ http://localhost:8501
 
 ## 사용 흐름
 
-1. `일반 사주 리포트` 페이지에서 생년월일시를 입력합니다.
-2. 백엔드 A가 사주 결과와 일반 리포트를 생성합니다.
-3. `AI 사주 채팅` 페이지에서 같은 사주 컨텍스트로 질문합니다.
-4. 백엔드 B가 OpenAI API를 통해 사주 기반 답변을 생성합니다.
+1. `app.py` 첫 화면에서 이름, 성별, 생년월일시를 입력합니다.
+2. 백엔드 A가 사주 결과를 계산하고 세션에 저장합니다.
+3. 사용자는 `데일리 리포트` 또는 `1:1 코칭` 화면으로 이동합니다.
+4. 데일리 리포트에서는 오행 밸런스, 영역별 운세, 라이프스타일 코칭을 확인합니다.
+5. 1:1 코칭에서는 같은 사주 컨텍스트로 상담 분야를 선택하고 AI에게 추가 질문을 합니다.
 
 ## 전체 폴더 구조
 
@@ -66,7 +67,7 @@ donga_project1/
 ├── .gitignore
 ├── README.md
 ├── core/
-├── pages/
+├── views/
 ├── ui/
 ├── utils/
 ├── tests/
@@ -79,7 +80,7 @@ donga_project1/
 | 폴더 | 설명 | 주요 담당 |
 | --- | --- | --- |
 | `core/` | 사주 계산, 일반 리포트 생성, LLM 연결, 채팅 엔진이 들어 있는 백엔드 폴더입니다. | 백엔드 A/B |
-| `pages/` | Streamlit에서 실제로 보이는 페이지 화면을 관리합니다. | 프론트 |
+| `views/` | `app.py`의 세션 기반 라우터가 호출하는 화면 렌더러를 관리합니다. | 프론트 |
 | `ui/` | 재사용 UI 컴포넌트와 CSS 스타일을 관리합니다. | 프론트, 디자인 |
 | `utils/` | 세션 상태 초기화, 로거 같은 공통 보조 기능을 관리합니다. | 공통 |
 | `tests/` | 백엔드와 주요 로직이 정상 동작하는지 확인하는 테스트 코드를 관리합니다. | 각 담당자 |
@@ -101,7 +102,7 @@ donga_project1/
 각 폴더 안에는 더 자세한 README가 있습니다.
 
 - [`core/README.md`](core/README.md)
-- [`pages/README.md`](pages/README.md)
+- [`views/README.md`](views/README.md)
 - [`ui/README.md`](ui/README.md)
 - [`utils/README.md`](utils/README.md)
 - [`tests/README.md`](tests/README.md)
@@ -114,7 +115,7 @@ donga_project1/
 | --- | --- |
 | 기획 | `docs/` |
 | 디자인 | `ui/`, `.streamlit/` |
-| Streamlit 프론트 | `app.py`, `pages/`, `ui/` |
+| Streamlit 프론트 | `app.py`, `views/`, `ui/` |
 | 백엔드 A | `core/`, `tests/` |
 | 백엔드 B | `core/`, `tests/`, `docs/` |
 | 발표/PPT | `README.md`, `docs/` |
