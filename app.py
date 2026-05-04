@@ -59,7 +59,7 @@ with form_col:
 
         col_c, col_d = st.columns(2)
         with col_c:
-            birth_date = st.date_input("생년월일", value=date(1997, 1, 1))
+           birth_date = st.date_input("생년월일", value=date(1997, 1, 1), min_value=date(1900, 1, 1), max_value=date.today())
         with col_d:
             birth_time = st.time_input("출생 시간", value=time(9, 0))
 
