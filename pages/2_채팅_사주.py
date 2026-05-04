@@ -381,6 +381,13 @@ def _inject_css() -> None:
             margin-bottom: 0.35rem;
         }
 
+        /* ── 스피너 텍스트 색상 */
+        [data-testid="stSpinner"] p,
+        [data-testid="stSpinner"] span,
+        div[data-testid="stSpinner"] > div > span {
+            color: #111111 !important;
+        }
+
         @media (max-width: 768px) {
             .bs-bar-wrap { height: 120px; }
             .mode-card, .mode-card-selected { height: 160px; }

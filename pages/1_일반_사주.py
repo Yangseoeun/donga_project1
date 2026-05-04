@@ -226,15 +226,16 @@ def _inject_css() -> None:
             width: 28px; height: 28px; border-radius: 7px;
             display: flex; align-items: center; justify-content: center; font-size: 0.9rem;
         }
-        .dr-cc-title { font-size: 0.86rem; font-weight: 700; color: #1a2035; }
+        .dr-cc-title { font-size: 1rem; font-weight: 700; color: #1a2035; }
         .dr-coaching-card ul { list-style: none; margin: 0; padding: 0; flex: 1; }
         .dr-coaching-card li {
-            font-size: 0.8rem; line-height: 1.6; color: #333333;
+            font-size: 1rem !important; line-height: 1.7; color: #333333;
             padding: 0.25rem 0; border-bottom: 1px solid #f0f2f5;
             display: flex; gap: 0.4rem;
         }
+        .dr-coaching-card li span { font-size: 1rem !important; line-height: 1.7; }
         .dr-coaching-card li:last-child { border-bottom: none; }
-        .dr-ck-key { font-weight: 700; white-space: nowrap; min-width: 5rem; color: #1A374D; }
+        .dr-ck-key { font-size: 1rem !important; font-weight: 700; white-space: nowrap; min-width: 6rem; color: #1A374D; }
 
         /* ── 통합 리포트 박스 */
         .dr-unified-report {
