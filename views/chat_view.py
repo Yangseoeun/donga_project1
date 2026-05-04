@@ -569,102 +569,98 @@ def _render_mode_section() -> str | None:
 
     return current_mode
 
+def render_chat_page() -> None:
+    # ===========================================================================
+    # 메인
+    # ===========================================================================
+    init_session_state()
+    apply_custom_styles()
+    _inject_css()
 
-# ===========================================================================
-# 메인
-# ===========================================================================
-st.set_page_config(
-    page_title="1:1 코칭",
-    page_icon="💬",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-init_session_state()
-apply_custom_styles()
-_inject_css()
+    saju    = st.session_state.get("user_saju")
+    profile = st.session_state.get("birth_profile", {})
 
-saju    = st.session_state.get("user_saju")
-profile = st.session_state.get("birth_profile", {})
-
-if saju is None:
-    st.warning("아직 입력된 정보가 없습니다. 첫페이지에서 기본 정보를 먼저 입력해주세요.")
-    if st.button("첫페이지로 돌아가기", type="primary"):
-        st.switch_page("app.py")
-    st.stop()
-
-if "prev_mode" not in st.session_state:
-    st.session_state["prev_mode"] = None
-
-# ── 헤더
-header_l, header_r = st.columns([3, 1])
-with header_l:
-    logo_b64  = _img_b64("로고.png")
-    st.markdown(
-        f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
-        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:0;">1:1코칭</div>',
-        unsafe_allow_html=True,
-    )
-with header_r:
-    with st.container(key="header_actions"):
-        if st.button("← 처음으로", key="home_action"):
-            st.switch_page("app.py")
-        if st.button("대화 초기화", key="reset_chat_action"):
-            st.session_state["chat_history"] = []
-            st.session_state["current_mode"] = None
-            st.session_state["prev_mode"] = None
+    if saju is None:
+        st.warning("아직 입력된 정보가 없습니다. 첫페이지에서 기본 정보를 먼저 입력해주세요.")
+        if st.button("첫페이지로 돌아가기", type="primary"):
+            st.session_state["active_view"] = "home"
             st.rerun()
+        st.stop()
 
-st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
+    if "prev_mode" not in st.session_state:
+        st.session_state["prev_mode"] = None
 
-# ── 프로필 + Balance Status
-_render_top_panel(saju, profile)
+    # ── 헤더
+    header_l, header_r = st.columns([3, 1])
+    with header_l:
+        logo_b64  = _img_b64("로고.png")
+        st.markdown(
+            f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
+            '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:0;">1:1코칭</div>',
+            unsafe_allow_html=True,
+        )
+    with header_r:
+        with st.container(key="header_actions"):
+            if st.button("← 처음으로", key="home_action"):
+                st.session_state["active_view"] = "home"
+                st.rerun()
+            if st.button("대화 초기화", key="reset_chat_action"):
+                st.session_state["chat_history"] = []
+                st.session_state["current_mode"] = None
+                st.session_state["prev_mode"] = None
+                st.rerun()
 
-# ── 한줄 요약
-_render_summary_bar(saju)
+    st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
 
-# ── 모드 선택
-selected_mode = _render_mode_section()
-if selected_mode is None:
-    st.stop()
+    # ── 프로필 + Balance Status
+    _render_top_panel(saju, profile)
 
-stream_enabled = os.getenv("STREAM_ENABLED", "true").lower() == "true"
+    # ── 한줄 요약
+    _render_summary_bar(saju)
 
-# ── 현재 모드 안내 말풍선 (chat_history에 누적하지 않음)
-mode_greeting = MODE_GREETING.get(selected_mode, "")
-if mode_greeting:
-    _render_chat_bubble("assistant", mode_greeting)
+    # ── 모드 선택
+    selected_mode = _render_mode_section()
+    if selected_mode is None:
+        st.stop()
 
-# ── 채팅 히스토리
-for message in st.session_state["chat_history"]:
-    _render_chat_bubble(message["role"], message["content"])
+    stream_enabled = os.getenv("STREAM_ENABLED", "true").lower() == "true"
 
-# ── 입력창
-user_input = st.chat_input("궁금한 사주 상담 내용을 입력하세요")
+    # ── 현재 모드 안내 말풍선 (chat_history에 누적하지 않음)
+    mode_greeting = MODE_GREETING.get(selected_mode, "")
+    if mode_greeting:
+        _render_chat_bubble("assistant", mode_greeting)
 
-if user_input:
-    st.session_state["chat_history"].append({"role": "user", "content": user_input})
-    _render_chat_bubble("user", user_input)
+    # ── 채팅 히스토리
+    for message in st.session_state["chat_history"]:
+        _render_chat_bubble(message["role"], message["content"])
 
-    try:
-        with st.spinner("사주 컨텍스트를 바탕으로 답변을 생성하는 중입니다..."):
-            prior_history = st.session_state["chat_history"][:-1]
-            if stream_enabled:
-                chunks = run_chat_stream(saju, prior_history, user_input, selected_mode)
-                answer = _write_streaming_ai_bubble(chunks)
-            else:
-                answer = run_chat(saju, prior_history, user_input, selected_mode)
-                _render_chat_bubble("assistant", answer)
-        st.session_state["chat_history"].append({"role": "assistant", "content": answer})
-        st.session_state["consultation_count"] += 1
-    except LLMConfigurationError as error:
-        logger.warning("LLM 설정 오류: %s", error)
-        answer = build_fallback_answer(saju, user_input)
-        st.warning(".env에 OPENAI_API_KEY를 설정하면 실제 AI 상담을 사용할 수 있습니다. 지금은 로컬 요약 답변을 표시합니다.")
-        _render_chat_bubble("assistant", answer)
-        st.session_state["chat_history"].append({"role": "assistant", "content": answer})
-    except Exception as error:
-        logger.error("채팅 응답 실패: %s", error)
-        answer = build_fallback_answer(saju, user_input)
-        st.warning("AI API 연결이 잠시 실패해서 로컬 요약 답변을 표시합니다.")
-        _render_chat_bubble("assistant", answer)
-        st.session_state["chat_history"].append({"role": "assistant", "content": answer})
+    # ── 입력창
+    user_input = st.chat_input("궁금한 사주 상담 내용을 입력하세요")
+
+    if user_input:
+        st.session_state["chat_history"].append({"role": "user", "content": user_input})
+        _render_chat_bubble("user", user_input)
+
+        try:
+            with st.spinner("사주 컨텍스트를 바탕으로 답변을 생성하는 중입니다..."):
+                prior_history = st.session_state["chat_history"][:-1]
+                if stream_enabled:
+                    chunks = run_chat_stream(saju, prior_history, user_input, selected_mode)
+                    answer = _write_streaming_ai_bubble(chunks)
+                else:
+                    answer = run_chat(saju, prior_history, user_input, selected_mode)
+                    _render_chat_bubble("assistant", answer)
+            st.session_state["chat_history"].append({"role": "assistant", "content": answer})
+            st.session_state["consultation_count"] += 1
+        except LLMConfigurationError as error:
+            logger.warning("LLM 설정 오류: %s", error)
+            answer = build_fallback_answer(saju, user_input)
+            st.warning(".env에 OPENAI_API_KEY를 설정하면 실제 AI 상담을 사용할 수 있습니다. 지금은 로컬 요약 답변을 표시합니다.")
+            _render_chat_bubble("assistant", answer)
+            st.session_state["chat_history"].append({"role": "assistant", "content": answer})
+        except Exception as error:
+            logger.error("채팅 응답 실패: %s", error)
+            answer = build_fallback_answer(saju, user_input)
+            st.warning("AI API 연결이 잠시 실패해서 로컬 요약 답변을 표시합니다.")
+            _render_chat_bubble("assistant", answer)
+            st.session_state["chat_history"].append({"role": "assistant", "content": answer})

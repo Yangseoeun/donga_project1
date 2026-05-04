@@ -221,7 +221,7 @@ _PRESCRIPTION_MAP["new_case"] = NewCategoryPrescription()
 
 | 항목 | 내용 |
 | --- | --- |
-| 수정 파일 | `pages/2_채팅_사주.py` |
+| 수정 파일 | `views/chat_view.py` |
 | 변경 유형 | 수정 |
 | 변경 요약 | 모드 버튼 클릭 시 `prev_mode` 비교로 모드 변경을 감지하고 `MODE_GREETING`을 `chat_history`에 자동 주입하여 인사말 즉시 표시 |
 | 인터페이스 영향 | 없음 (`ui/components.py`, `ui/styles.py` 미수정, core 인터페이스 유지) |

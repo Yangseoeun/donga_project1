@@ -446,51 +446,48 @@ def _render_unified_report(daily: dict) -> None:
         unsafe_allow_html=True,
     )
 
+def render_report_page() -> None:
+    # ===========================================================================
+    # 메인
+    # ===========================================================================
+    init_session_state()
+    apply_custom_styles()
+    _inject_css()
 
-# ===========================================================================
-# 메인
-# ===========================================================================
-st.set_page_config(
-    page_title="데일리 리포트",
-    page_icon="🌅",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-init_session_state()
-apply_custom_styles()
-_inject_css()
+    saju    = st.session_state.get("user_saju")
+    profile = st.session_state.get("birth_profile", {})
 
-saju    = st.session_state.get("user_saju")
-profile = st.session_state.get("birth_profile", {})
+    if saju is None:
+        st.warning("아직 입력된 정보가 없습니다. 첫페이지에서 기본 정보를 먼저 입력해주세요.")
+        if st.button("첫페이지로 돌아가기", type="primary"):
+            st.session_state["active_view"] = "home"
+            st.rerun()
+        st.stop()
 
-if saju is None:
-    st.warning("아직 입력된 정보가 없습니다. 첫페이지에서 기본 정보를 먼저 입력해주세요.")
-    if st.button("첫페이지로 돌아가기", type="primary"):
-        st.switch_page("app.py")
-    st.stop()
+    # ── 헤더
+    header_l, header_r = st.columns([3, 1])
+    with header_l:
+        logo_b64 = _img_b64("로고.png")
+        st.markdown(
+            f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
+            '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:0;">데일리 리포트</div>',
+            unsafe_allow_html=True,
+        )
+    with header_r:
+        with st.container(key="header_actions"):
+            if st.button("← 처음으로", key="home_action"):
+                st.session_state["active_view"] = "home"
+                st.rerun()
+            if st.button("💬 1:1 채팅 상담", key="chat_consult_action"):
+                st.session_state["active_view"] = "chat"
+                st.rerun()
 
-# ── 헤더
-header_l, header_r = st.columns([3, 1])
-with header_l:
-    logo_b64 = _img_b64("로고.png")
-    st.markdown(
-        f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
-        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:0;">데일리 리포트</div>',
-        unsafe_allow_html=True,
-    )
-with header_r:
-    with st.container(key="header_actions"):
-        if st.button("← 처음으로", key="home_action"):
-            st.switch_page("app.py")
-        if st.button("💬 1:1 채팅 상담", key="chat_consult_action"):
-            st.switch_page("pages/2_채팅_사주.py")
+    st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
 
-st.markdown("<div style='height:0'></div>", unsafe_allow_html=True)
+    # ── 본문
+    daily = build_daily_report(saju)
 
-# ── 본문
-daily = build_daily_report(saju)
-
-_render_top_panel(saju, profile)
-_render_unified_report(daily)
-_render_coaching(daily["coaching"])
+    _render_top_panel(saju, profile)
+    _render_unified_report(daily)
+    _render_coaching(daily["coaching"])
 

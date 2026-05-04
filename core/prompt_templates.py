@@ -70,7 +70,7 @@ _RESPONSE_FORMAT_INSTRUCTION = """
 """
 
 # 모드 버튼 클릭 시 채팅창에 즉시 표시되는 인사말
-# pages/2_채팅_사주.py 에서 import 하여 사용합니다.
+# views/chat_view.py 에서 import 하여 사용합니다.
 MODE_GREETING: dict[str, str] = {
     "business": (
         "귀하의 사주에 깃든 업무의 기운을 살피니,\n"
