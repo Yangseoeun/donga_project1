@@ -17,6 +17,7 @@ def init_session_state() -> None:
         "user_saju": None,
         "current_mode": "general",
         "consultation_count": 0,
+        "active_view": "home",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
