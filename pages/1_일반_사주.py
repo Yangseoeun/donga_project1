@@ -82,39 +82,43 @@ def _inject_css() -> None:
             font-size: 1.8rem; font-weight: 800;
             color: #1A374D; margin: 0 0 0.8rem;
         }
-        .st-key-chat_consult_button {
+        .st-key-header_actions {
             display: flex;
+            flex-direction: column;
+            align-items: flex-end;
             justify-content: flex-end;
             width: 100%;
-            padding-top: 108px;
+            padding-top: 64px;
             margin-bottom: -2px;
+            gap: 6px;
         }
-        .st-key-chat_consult_button [data-testid="stButton"] {
+        .st-key-header_actions [data-testid="stButton"] {
             width: auto;
             margin-left: auto;
         }
-        .st-key-chat_consult_button .st-key-chat_consult_action {
+        .st-key-header_actions .st-key-home_action,
+        .st-key-header_actions .st-key-chat_consult_action {
             display: flex !important;
             justify-content: flex-end !important;
             width: fit-content !important;
             margin-left: auto !important;
         }
-        .st-key-chat_consult_button [data-testid="stButton"] button {
+        .st-key-header_actions [data-testid="stButton"] button {
             width: auto !important;
             min-height: 0 !important;
-            height: 22px !important;
-            padding: 0 10px !important;
+            height: 32px !important;
+            padding: 0 16px !important;
             border-radius: 999px !important;
             background: #07314a !important;
             border: none !important;
             color: #ffffff !important;
-            font-size: 9px !important;
+            font-size: 12px !important;
             font-weight: 700 !important;
             line-height: 1 !important;
         }
-        .st-key-chat_consult_button [data-testid="stButton"] button p {
+        .st-key-header_actions [data-testid="stButton"] button p {
             color: #ffffff !important;
-            font-size: 9px !important;
+            font-size: 12px !important;
             line-height: 1 !important;
             margin: 0 !important;
         }
@@ -471,11 +475,13 @@ with header_l:
     logo_b64 = _img_b64("로고.png")
     st.markdown(
         f'<img src="data:image/png;base64,{logo_b64}" style="height:82px; margin-bottom:8px; display:block;" />'
-        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:6px;">데일리 리포트</div>',
+        '<div style="font-size:32px; font-weight:800; color:#000000; line-height:1.2; margin-bottom:0;">데일리 리포트</div>',
         unsafe_allow_html=True,
     )
 with header_r:
-    with st.container(key="chat_consult_button"):
+    with st.container(key="header_actions"):
+        if st.button("← 처음으로", key="home_action"):
+            st.switch_page("app.py")
         if st.button("💬 1:1 채팅 상담", key="chat_consult_action"):
             st.switch_page("pages/2_채팅_사주.py")
 
