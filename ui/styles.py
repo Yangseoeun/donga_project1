@@ -7,12 +7,58 @@ import streamlit as st
 
 
 _MAIN_IMG_DIR = Path(__file__).parent.parent / "img" / "proj1_main"
+_FONT_DIR = Path(__file__).parent / "fonts" / "pretendard_woff"
 
 
 @st.cache_data
 def _main_img_b64(filename: str) -> str:
     with open(_MAIN_IMG_DIR / filename, "rb") as f:
         return base64.b64encode(f.read()).decode()
+
+
+@st.cache_data
+def _font_b64(filename: str) -> str:
+    with open(_FONT_DIR / filename, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def _pretendard_font_css() -> str:
+    return """
+        @font-face {
+            font-family: 'Pretendard';
+            src: url(data:font/woff;base64,__PRETENDARD_REGULAR__) format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url(data:font/woff;base64,__PRETENDARD_MEDIUM__) format('woff');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url(data:font/woff;base64,__PRETENDARD_SEMIBOLD__) format('woff');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Pretendard';
+            src: url(data:font/woff;base64,__PRETENDARD_BOLD__) format('woff');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    """.replace("__PRETENDARD_REGULAR__", _font_b64("Pretendard-Regular.woff")).replace(
+        "__PRETENDARD_MEDIUM__", _font_b64("Pretendard-Medium.woff")
+    ).replace(
+        "__PRETENDARD_SEMIBOLD__", _font_b64("Pretendard-SemiBold.woff")
+    ).replace(
+        "__PRETENDARD_BOLD__", _font_b64("Pretendard-Bold.woff")
+    )
 
 
 def apply_custom_styles() -> None:
@@ -22,9 +68,13 @@ def apply_custom_styles() -> None:
     Returns:
         None
     """
-    st.markdown(
-        """
+    css = """
         <style>
+        __PRETENDARD_FONT_CSS__
+        html, body, .stApp, button, input, textarea, select,
+        [data-testid="stMarkdownContainer"] {
+            font-family: 'Pretendard', sans-serif !important;
+        }
         [data-testid="stSidebar"],
         [data-testid="collapsedControl"] {
             display: none;
@@ -157,7 +207,9 @@ def apply_custom_styles() -> None:
             }
         }
         </style>
-        """,
+        """.replace("__PRETENDARD_FONT_CSS__", _pretendard_font_css())
+    st.markdown(
+        css,
         unsafe_allow_html=True,
     )
 
@@ -171,7 +223,11 @@ def apply_landing_styles() -> None:
     css = """
         <style>
         /* ── Pretendard 폰트 */
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css');
+        __PRETENDARD_FONT_CSS__
+        html, body, .stApp, button, input, textarea, select,
+        [data-testid="stMarkdownContainer"] {
+            font-family: 'Pretendard', sans-serif !important;
+        }
 
         /* ── 사이드바 숨김 */
         [data-testid="stSidebar"],
@@ -198,8 +254,9 @@ def apply_landing_styles() -> None:
             margin-bottom: 46px;
         }
         .landing-logo-badge img {
+            width: 220px;
             height: auto;
-            max-width: none;
+            max-width: 80vw;
             display: block;
             margin: 0 auto;
         }
@@ -226,7 +283,7 @@ def apply_landing_styles() -> None:
         /* ── 폼 설명 */
         .form-desc {
             font-family: 'Pretendard', sans-serif;
-            font-size: 13px;
+            font-size: 14px;
             color: #000000;
             text-align: center;
             margin: 0 0 18px;
@@ -247,7 +304,7 @@ def apply_landing_styles() -> None:
             border: 1px solid #cfd7d9 !important;
             height: 42px !important;
             font-family: 'Pretendard', sans-serif !important;
-            font-size: 13px !important;
+            font-size: 14px !important;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -265,12 +322,15 @@ def apply_landing_styles() -> None:
         [data-baseweb="input"] * {
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-family: 'Pretendard', sans-serif !important;
+            font-size: 14px !important;
         }
         [data-testid="stDateInput"] input {
             border-radius: 8px !important;
             border: none !important;
             height: 42px !important;
             font-family: 'Pretendard', sans-serif !important;
+            font-size: 14px !important;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -301,6 +361,8 @@ def apply_landing_styles() -> None:
         [data-testid="stSelectbox"] [data-baseweb="select"] div {
             background-color: #ffffff !important;
             color: #000000 !important;
+            font-family: 'Pretendard', sans-serif !important;
+            font-size: 14px !important;
         }
         [data-testid="stSelectbox"] svg {
             fill: #000000 !important;
@@ -310,6 +372,8 @@ def apply_landing_styles() -> None:
             border-radius: 8px !important;
             border: 1px solid #cfd7d9 !important;
             height: 42px !important;
+            font-family: 'Pretendard', sans-serif !important;
+            font-size: 14px !important;
             background: #ffffff !important;
             color: #000000 !important;
         }
@@ -372,10 +436,10 @@ def apply_landing_styles() -> None:
         [data-testid="stRadio"] p,
         [data-testid="stRadio"] span {
             color: #000000 !important;
-            font-size: 12px !important;
+            font-size: 14px !important;
         }
         [data-testid="stRadio"] [role="radiogroup"] label span {
-            font-size: 16px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
         }
         [data-testid="stTextInput"] input::placeholder,
@@ -391,7 +455,7 @@ def apply_landing_styles() -> None:
             border-radius: 100px !important;
             height: 52px !important;
             font-family: 'Pretendard', sans-serif !important;
-            font-size: 17px !important;
+            font-size: 14px !important;
             font-weight: 700 !important;
             border: none !important;
             margin-top: 8px;
@@ -497,7 +561,7 @@ def apply_landing_styles() -> None:
             .guide-card       { min-height: auto; }
         }
         </style>
-        """.replace("__BG_B64__", bg_b64)
+        """.replace("__PRETENDARD_FONT_CSS__", _pretendard_font_css()).replace("__BG_B64__", bg_b64)
     st.markdown(
         css,
         unsafe_allow_html=True,
