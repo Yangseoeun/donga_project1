@@ -42,9 +42,8 @@ with form_col:
         with col_a:
             gender = st.selectbox(
                 "성별",
-                ["unknown", "female", "male"],
+                ["female", "male"],
                 format_func={
-                    "unknown": "선택 안 함",
                     "female": "여성",
                     "male": "남성",
                 }.get,
