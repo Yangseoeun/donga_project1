@@ -14,3 +14,4 @@ Streamlit 앱의 전역 설정을 관리합니다.
 - 세부 카드/채팅 말풍선 스타일은 `ui/styles.py`에서 수정합니다.
 
 ## test하기
+# git test
